@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  ipfs-node2:
+    image: ipfs/kubo:latest
+    container_name: p2p-radio-ipfs-node2
+    ports:
+      - "4002:4001"      # IPFS swarm (different external port)
+      - "8081:8080"      # IPFS gateway (different external port)
+      - "5002:5001"      # IPFS API (different external port)
+    volumes:
+      - ./data-node2/ipfs:/data/ipfs
+      - ./data-node2/ipfs-staging:/export
+    environment:
+      - IPFS_PROFILE=server
+    restart: unless-stopped
+    networks:
+      - p2p-radio-node2
+
+  liquidsoap-node2:
+    build:
+      context: .
+      dockerfile: Dockerfile.liquidsoap
+    container_name: p2p-radio-liquidsoap-node2
+    depends_on:
+      - ipfs-node2
+    volumes:
+      - ./config/radio.liq:/etc/liquidsoap/radio.liq
+      - ./data/music:/music              # Shared music library
+      - ./data-node2/hls:/hls
+      - ./data-node2/state:/state
+      - ./scripts:/scripts
+    environment:
+      - IPFS_API=http://ipfs-node2:5001
+      - IPFS_GATEWAY=http://ipfs-node2:8080
+      - NODE_ID=${NODE_ID:-node2}
+      - STREAM_TOPIC=p2p-radio-stream
+    restart: unless-stopped
+    networks:
+      - p2p-radio-node2
+
+  nginx-node2:
+    image: nginx:alpine
+    container_name: p2p-radio-nginx-node2
+    depends_on:
+      - ipfs-node2
+      - liquidsoap-node2
+    ports:
+      - "81:80"          # Web interface (different external port)
+      - "444:443"        # HTTPS (different external port)
+    volumes:
+      - ./config/nginx-node2.conf:/etc/nginx/nginx.conf
+      - ./data-node2/hls:/usr/share/nginx/html/hls
+      - ./frontend:/usr/share/nginx/html
+      - ./data-node2/certs:/etc/nginx/certs
+    restart: unless-stopped
+    networks:
+      - p2p-radio-node2
+
+  state-sync-node2:
+    build:
+      context: .
+      dockerfile: Dockerfile.state-sync
+    container_name: p2p-radio-state-sync-node2
+    depends_on:
+      - ipfs-node2
+    volumes:
+      - ./data-node2/state:/state
+      - ./scripts:/scripts
+    environment:
+      - IPFS_API=http://ipfs-node2:5001
+      - NODE_ID=${NODE_ID:-node2}
+      - STREAM_TOPIC=p2p-radio-stream
+    restart: unless-stopped
+    networks:
+      - p2p-radio-node2
+
+networks:
+  p2p-radio-node2:
+    driver: bridge

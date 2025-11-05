@@ -1,0 +1,21 @@
+FROM debian:bullseye-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && apt-get install -y \
+    liquidsoap \
+    ffmpeg \
+    curl \
+    jq \
+    python3 \
+    python3-pip \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN pip3 install requests
+
+WORKDIR /app
+
+COPY scripts/liquidsoap-wrapper.sh /app/
+RUN chmod +x /app/liquidsoap-wrapper.sh
+
+CMD ["/app/liquidsoap-wrapper.sh"]
