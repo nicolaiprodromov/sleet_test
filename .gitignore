@@ -1,3 +1,42 @@
+# Ignore deploy artifacts and large generated data
+/data/ipfs/
+/data/ipfs-staging/
+/data/autoconf/
+/data/hls/
+/data/music/
+/data/processed/
+/data/state/
+/data/certs/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual envs
+venv/
+.venv/
+
+# Logs and runtime files
+*.log
+*.pid
+
+# Docker / compose overrides
+docker-compose.override.yml
+
+# Node
+node_modules/
+
+# macOS
+.DS_Store
+
+# Build artifacts
+dist/
+build/
+
+# Databases
+*.sqlite3
+*.db
 music/
 data/music/
 data/hls/

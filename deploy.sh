@@ -3,7 +3,7 @@
 set -e
 
 echo "==================================="
-echo "P2P Radio Node Deployment"
+echo "P2P Radio Node Deployment (IPNS)"
 echo "==================================="
 echo ""
 
@@ -19,6 +19,10 @@ NODE_ID=${NODE_ID}
 IPFS_API=http://ipfs:5001
 IPFS_GATEWAY=http://ipfs:8080
 STREAM_TOPIC=p2p-radio-stream
+IPNS_LIFETIME=24h
+IPNS_TTL=10s
+PLAYLIST_UPDATE_INTERVAL=2
+MAX_SEGMENTS=200
 EOF
     fi
     echo "Generated NODE_ID: ${NODE_ID}"
@@ -29,7 +33,7 @@ source .env
 echo "Node ID: ${NODE_ID}"
 echo ""
 
-mkdir -p data/ipfs data/music data/hls data/state data/processed data/certs
+mkdir -p data/ipfs data/music data/hls data/state data/processed data/certs data/ipfs-staging
 
 echo "Checking for music files..."
 if [ ! "$(ls -A data/music)" ]; then
@@ -45,19 +49,58 @@ if [ ! "$(ls -A data/music)" ]; then
 fi
 
 echo ""
-echo "Starting IPFS and preparing music library..."
+echo "Starting IPFS node..."
 docker-compose up -d ipfs
 
 echo "Waiting for IPFS to be ready..."
-sleep 10
+sleep 20
+
+echo "Checking IPFS status..."
+docker exec p2p-radio-ipfs ipfs id || {
+    echo "ERROR: IPFS failed to start"
+    exit 1
+}
 
 echo ""
 echo "Processing and pinning music files..."
-docker-compose run --rm liquidsoap python3 /scripts/prepare-music.py /music /data/processed
+docker-compose run --rm liquidsoap python3 /scripts/prepare-music.py /music /data/processed || true
+
+echo ""
+echo "==================================="
+echo "Initializing IPNS Keys"
+echo "==================================="
+
+if [ ! -f data/state/ipns_keys.json ]; then
+    echo "Creating IPNS keys for mutable playlists..."
+    docker-compose run --rm playlist-generator python3 /scripts/init-ipns.py
+    
+    if [ -f data/state/ipns_keys.json ]; then
+        echo ""
+        echo "✓ IPNS keys created successfully!"
+        echo ""
+        echo "Your permanent stream URLs:"
+        cat data/state/ipns_keys.json
+    else
+        echo "ERROR: Failed to create IPNS keys"
+        exit 1
+    fi
+else
+    echo "✓ IPNS keys already exist"
+fi
+
+echo ""
+echo "Enabling IPFS PubSub..."
+docker-compose exec -T ipfs ipfs config --json Experimental.Libp2pStreamMounting true || true
+docker-compose exec -T ipfs ipfs config --json Pubsub.Enabled true || true
+docker-compose exec -T ipfs ipfs config Pubsub.Router gossipsub || true
 
 echo ""
 echo "Starting all services..."
 docker-compose up -d
+
+echo ""
+echo "Waiting for services to initialize..."
+sleep 10
 
 echo ""
 echo "==================================="
@@ -65,10 +108,23 @@ echo "Deployment Complete!"
 echo "==================================="
 echo ""
 echo "Node ID: ${NODE_ID}"
-echo "Web Interface: http://localhost"
 echo "IPFS Gateway: http://localhost:8080"
-echo "IPFS API: http://localhost:5001"
+echo ""
+echo "IPNS Stream URLs (saved in data/state/stream_info.json):"
+if [ -f data/state/stream_info.json ]; then
+    cat data/state/stream_info.json | grep -E '(master_playlist_ipns|ipns)' || echo "(waiting for first playlist generation...)"
+else
+    echo "(waiting for first playlist generation...)"
+fi
+echo ""
+echo "IPNS Streaming Mode: ENABLED"
+echo "- Segments uploaded to IPFS in real-time"
+echo "- Playlists published to IPNS (mutable)"
+echo "- Continuous streaming with permanent URLs"
+echo "- Access via: http://localhost:8080/ipns/YOUR_IPNS_NAME"
 echo ""
 echo "To view logs: docker-compose logs -f"
+echo "To check IPNS keys: cat data/state/ipns_keys.json"
+echo "To check stream info: cat data/state/stream_info.json"
 echo "To stop: docker-compose down"
 echo ""

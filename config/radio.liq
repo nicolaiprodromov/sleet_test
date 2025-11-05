@@ -49,26 +49,14 @@ music = on_metadata(fun(m) -> (), music)
 
 music = mksafe(music)
 
-aac_lofi = %ffmpeg(format="mpegts",
-                   codec="aac",
-                   channels=2,
-                   ar=44100,
-                   b="64k")
-aac_midfi = %ffmpeg(format="mpegts",
-                    codec="aac",
-                    channels=2,
-                    ar=44100,
-                    b="96k")
-aac_hifi = %ffmpeg(format="mpegts",
-                   codec="aac",
-                   channels=2,
-                   ar=44100,
-                   b="192k")
+aac_stream = %ffmpeg(format="mpegts",
+                     codec="aac",
+                     channels=2,
+                     ar=44100,
+                     b="192k")
 
 streams = [
-  ("lofi", aac_lofi),
-  ("midfi", aac_midfi),
-  ("hifi", aac_hifi)
+  ("stream", aac_stream)
 ]
 
 def segment_name(~position, ~extname, stream_name) =
@@ -78,10 +66,20 @@ def segment_name(~position, ~extname, stream_name) =
 end
 
 streams_info = [
-  ("lofi", (70000, "mp4a.40.2", "ts")),
-  ("midfi", (100000, "mp4a.40.2", "ts")),
-  ("hifi", (200000, "mp4a.40.2", "ts"))
+  ("stream", (200000, "mp4a.40.2", "ts"))
 ]
+
+def on_file_change(~state, fname) =
+  log_msg("File event: #{state} - #{fname}")
+  
+  # Only process completed .ts segments
+  if state == "created" and string.match(pattern="\\.ts$", fname) then
+    log_msg("New segment created: #{fname}")
+    # The hls-to-ipfs.py service will automatically detect and upload this file
+  elsif state == "created" and string.match(pattern="\\.m3u8$", fname) then
+    log_msg("Playlist created: #{fname}")
+  end
+end
 
 output.file.hls(
   playlist="live.m3u8",
@@ -90,9 +88,10 @@ output.file.hls(
   segments_overhead=5,
   segment_name=segment_name,
   streams_info=streams_info,
+  on_file_change=on_file_change,
   hls_dir,
   streams,
   music
 )
 
-log_msg("HLS output started")
+log_msg("HLS output started with IPFS integration")
