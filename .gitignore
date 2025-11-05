@@ -1,40 +1,16 @@
-# Ignore deploy artifacts and large generated data
-# Use wildcard to catch all data subdirectories except .gitkeep
-/data/*
-!/data/.gitkeep
-
 # Python
 __pycache__/
 *.py[cod]
 *.pyo
 
-# Virtual envs
-venv/
-.venv/
-
-# Logs and runtime files
-*.log
-*.pid
-
-# Docker / compose overrides
 docker-compose.override.yml
 
-# Node
-node_modules/
-
-# macOS
-.DS_Store
-
-# Build artifacts
 dist/
 build/
 
-# Databases
 *.sqlite3
 *.db
-music/
-data/music/
-data/hls/
+data/
 .env
 *.log
 *.pid
