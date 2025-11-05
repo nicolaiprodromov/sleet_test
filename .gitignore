@@ -1,8 +1,13 @@
+music/
+data/music/
+data/hls/
+data-node2/
 .env
+.env.node2
 .vscode/
+.devcontainer/
 *.log
 *.pid
 *.seed
 *.swp
-.DS_Store
 node_modules/
