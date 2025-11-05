@@ -1,12 +1,7 @@
 # Ignore deploy artifacts and large generated data
-/data/ipfs/
-/data/ipfs-staging/
-/data/autoconf/
-/data/hls/
-/data/music/
-/data/processed/
-/data/state/
-/data/certs/
+# Use wildcard to catch all data subdirectories except .gitkeep
+/data/*
+!/data/.gitkeep
 
 # Python
 __pycache__/
