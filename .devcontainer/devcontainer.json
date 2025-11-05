@@ -1,71 +1,62 @@
 {
-  "name": "IPFS Live Streaming Radio",
+  "name": "Sleetbubble",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu",
+
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {},
-    "ghcr.io/devcontainers/features/python:1": {
-      "version": "3.11"
-    },
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "18"
+      "version": "lts"
     }
   },
+
+  "postCreateCommand": "wget -q https://dist.ipfs.tech/kubo/v0.31.0/kubo_v0.31.0_linux-amd64.tar.gz -O /tmp/ipfs.tar.gz && tar -xzf /tmp/ipfs.tar.gz -C /tmp && sudo bash /tmp/kubo/install.sh && rm -rf /tmp/kubo /tmp/ipfs.tar.gz",
+
   "forwardPorts": [
-    80, 81, 443, 444,           // Web interfaces 
-    8080, 8081,                 // IPFS Gateways
-    5001, 5002,                 // IPFS APIs
-    4001, 4002                  // IPFS Swarm
+    80, 81, 443, 444,
+    8080, 8081,
+    5001, 5002,
+    4001, 4002
   ],
+
   "portsAttributes": {
-    "80": {
-      "label": "Main Web Player",
-      "onAutoForward": "notify",
-      "visibility": "public"
-    },
-    "81": {
-      "label": "Node 2 Web Player", 
-      "onAutoForward": "notify",
-      "visibility": "public"
-    },
-    "443": {
-      "label": "HTTPS Main",
-      "onAutoForward": "silent",
-      "visibility": "public"
-    },
-    "444": {
-      "label": "HTTPS Node 2",
-      "onAutoForward": "silent", 
-      "visibility": "public"
-    },
-    "8080": {
-      "label": "IPFS Gateway Node 1",
-      "onAutoForward": "notify",
-      "visibility": "public"
-    },
-    "8081": {
-      "label": "IPFS Gateway Node 2",
-      "onAutoForward": "notify",
-      "visibility": "public"
-    },
-    "5001": {
-      "label": "IPFS API Node 1",
-      "onAutoForward": "silent",
-      "visibility": "private"
-    },
-    "5002": {
-      "label": "IPFS API Node 2", 
-      "onAutoForward": "silent",
-      "visibility": "private"
-    },
-    "4001": {
-      "label": "IPFS Swarm Node 1",
-      "onAutoForward": "silent",
-      "visibility": "public"
-    },
-    "4002": {
-      "label": "IPFS Swarm Node 2",
-      "onAutoForward": "silent",
-      "visibility": "public"
+    "80":   { "label": "Main Web Player",     "onAutoForward": "notify", "visibility": "public" },
+    "81":   { "label": "Node 2 Web Player",   "onAutoForward": "notify", "visibility": "public" },
+    "443":  { "label": "HTTPS Main",          "onAutoForward": "silent", "visibility": "public" },
+    "444":  { "label": "HTTPS Node 2",        "onAutoForward": "silent", "visibility": "public" },
+    "8080": { "label": "IPFS Gateway Node 1", "onAutoForward": "notify", "visibility": "public" },
+    "8081": { "label": "IPFS Gateway Node 2", "onAutoForward": "notify", "visibility": "public" },
+    "5001": { "label": "IPFS API Node 1",     "onAutoForward": "silent", "visibility": "private" },
+    "5002": { "label": "IPFS API Node 2",     "onAutoForward": "silent", "visibility": "private" },
+    "4001": { "label": "IPFS Swarm Node 1",   "onAutoForward": "silent", "visibility": "public" },
+    "4002": { "label": "IPFS Swarm Node 2",   "onAutoForward": "silent", "visibility": "public" }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "GitHub.vscode-pull-request-github",
+        "GitHub.github-vscode-theme",
+        "ms-vscode.vscode-websearchforcopilot"
+      ],
+      "settings": {
+        "workbench.colorTheme": "GitHub Dark",
+        "github.copilot.enableWebSearch": true,
+
+        "mcp": {
+          "servers": {
+            "deepwiki": {
+              "type": "sse",
+              "url": "https://mcp.deepwiki.com/sse"
+            },
+
+            "playwright": {
+              "command": "npx",
+              "args": [ "-y", "@playwright/mcp", "--browser", "chromium" ]
+            }
+          }
+        }
+      }
     }
   }
 }
