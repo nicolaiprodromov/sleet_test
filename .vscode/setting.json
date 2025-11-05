@@ -1,0 +1,7 @@
+{
+    "github.copilot.nextEditSuggestions.enabled": true,
+    "chat.editing.autoAcceptDelay": 2,
+    "chat.tools.terminal.autoApprove": {
+        "/.*/": true
+    }
+}
