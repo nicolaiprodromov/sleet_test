@@ -62,6 +62,15 @@ docker exec p2p-radio-ipfs ipfs id || {
 }
 
 echo ""
+echo "Configuring IPFS for Docker networking..."
+docker exec p2p-radio-ipfs ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
+docker exec p2p-radio-ipfs ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
+
+echo "Restarting IPFS with new configuration..."
+docker-compose restart ipfs
+sleep 10
+
+echo ""
 echo "Processing and pinning music files..."
 docker-compose run --rm liquidsoap python3 /scripts/prepare-music.py /music /data/processed || true
 
