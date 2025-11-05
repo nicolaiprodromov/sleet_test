@@ -111,13 +111,6 @@ def scan_and_pin_music(music_dir, output_dir):
     
     print(f"\nManifest saved to: {manifest_file}")
     
-    playlist_file = os.path.join(music_dir, 'playlist.m3u')
-    with open(playlist_file, 'w') as f:
-        for music in music_files:
-            f.write(f"{music['path']}\n")
-    
-    print(f"Playlist created: {playlist_file}")
-    
     return music_files
 
 if __name__ == '__main__':

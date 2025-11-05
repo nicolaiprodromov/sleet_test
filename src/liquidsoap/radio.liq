@@ -33,7 +33,7 @@ def write_state(position, track) =
   timestamp = int_of_float(time())
   state = "{\"position\": #{position}, \"track\": \"#{track}\", \"timestamp\": #{timestamp}, \"node_id\": \"#{node_id}\"}"
   file.write(data=state, state_file)
-  ignore(system("python3 /scripts/publish-state.py #{state_file}"))
+  ignore(system("python3 /src/state-sync/publish-state.py #{state_file}"))
   ignore(log_msg("State updated: #{state}"))
 end
 

@@ -16,16 +16,20 @@ services:
   liquidsoap:
     build:
       context: .
-      dockerfile: Dockerfile.liquidsoap
+      dockerfile: src/liquidsoap/Dockerfile
+      cache_from:
+        - p2p-radio-liquidsoap:latest
+    image: p2p-radio-liquidsoap:latest
     container_name: p2p-radio-liquidsoap
     depends_on:
       - ipfs
     volumes:
-      - ./config/radio.liq:/etc/liquidsoap/radio.liq
+      - ./src/liquidsoap/radio.liq:/etc/liquidsoap/radio.liq
       - ./data/music:/music
       - ./data/hls:/hls
       - ./data/state:/state
-      - ./scripts:/scripts
+      - ./src:/src
+      - ./playlist.config.json:/workspace/playlist.config.json
     environment:
       - IPFS_API=http://ipfs:5001
       - IPFS_GATEWAY=http://ipfs:8080
@@ -36,13 +40,16 @@ services:
   state-sync:
     build:
       context: .
-      dockerfile: Dockerfile.state-sync
+      dockerfile: src/state-sync/Dockerfile
+      cache_from:
+        - p2p-radio-state-sync:latest
+    image: p2p-radio-state-sync:latest
     container_name: p2p-radio-state-sync
     depends_on:
       - ipfs
     volumes:
       - ./data/state:/state
-      - ./scripts:/scripts
+      - ./src:/src
     environment:
       - IPFS_API=http://ipfs:5001
       - NODE_ID=${NODE_ID:-node1}
@@ -52,7 +59,10 @@ services:
   hls-uploader:
     build:
       context: .
-      dockerfile: Dockerfile.state-sync
+      dockerfile: src/hls-uploader/Dockerfile
+      cache_from:
+        - p2p-radio-hls-uploader:latest
+    image: p2p-radio-hls-uploader:latest
     container_name: p2p-radio-hls-uploader
     depends_on:
       - ipfs
@@ -60,20 +70,23 @@ services:
     volumes:
       - ./data/hls:/hls
       - ./data/state:/state
-      - ./scripts:/scripts
+      - ./src:/src
     environment:
       - IPFS_API=http://ipfs:5001
       - HLS_DIR=/hls
       - STATE_DIR=/state
       - NODE_ID=${NODE_ID:-node1}
       - MAX_SEGMENTS=50
-    command: python3 /scripts/hls-to-ipfs.py
+    command: python3 /src/hls-uploader/hls-to-ipfs.py
     restart: unless-stopped
 
   playlist-generator:
     build:
       context: .
-      dockerfile: Dockerfile.state-sync
+      dockerfile: src/playlist-generator/Dockerfile
+      cache_from:
+        - p2p-radio-playlist-generator:latest
+    image: p2p-radio-playlist-generator:latest
     container_name: p2p-radio-playlist-generator
     depends_on:
       - ipfs
@@ -81,7 +94,7 @@ services:
     volumes:
       - ./data/hls:/hls
       - ./data/state:/state
-      - ./scripts:/scripts
+      - ./src:/src
     environment:
       - IPFS_API=http://ipfs:5001
       - IPFS_GATEWAY=http://ipfs:8080
@@ -91,13 +104,16 @@ services:
       - PLAYLIST_UPDATE_INTERVAL=3
       - IPNS_LIFETIME=24h
       - IPNS_TTL=30s
-    command: python3 /scripts/generate-ipns-playlist.py
+    command: python3 /src/playlist-generator/generate-ipns-playlist.py
     restart: unless-stopped
 
   segment-cleanup:
     build:
       context: .
-      dockerfile: Dockerfile.state-sync
+      dockerfile: src/segment-cleanup/Dockerfile
+      cache_from:
+        - p2p-radio-segment-cleanup:latest
+    image: p2p-radio-segment-cleanup:latest
     container_name: p2p-radio-segment-cleanup
     depends_on:
       - ipfs
@@ -105,7 +121,7 @@ services:
     volumes:
       - ./data/hls:/hls
       - ./data/state:/state
-      - ./scripts:/scripts
+      - ./src:/src
     environment:
       - IPFS_API=http://ipfs:5001
       - HLS_DIR=/hls
@@ -114,7 +130,7 @@ services:
       - MAX_SEGMENTS=50
       - CLEANUP_INTERVAL=60
       - SEGMENT_RETENTION_TIME=300
-    command: python3 /scripts/cleanup-old-segments.py
+    command: python3 /src/segment-cleanup/cleanup-old-segments.py
     restart: unless-stopped
 
 

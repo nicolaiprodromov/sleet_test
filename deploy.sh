@@ -2,6 +2,9 @@
 
 set -e
 
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+
 echo "==================================="
 echo "P2P Radio Node Deployment (IPNS)"
 echo "==================================="
@@ -48,9 +51,12 @@ if [ ! "$(ls -A data/music)" ]; then
     fi
 fi
 
+echo "Building Docker images with layer caching..."
+docker compose build --parallel
+
 echo ""
 echo "Starting IPFS node..."
-docker-compose up -d ipfs
+docker compose up -d ipfs
 
 echo "Waiting for IPFS to be ready..."
 sleep 20
@@ -67,12 +73,18 @@ docker exec p2p-radio-ipfs ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
 docker exec p2p-radio-ipfs ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
 
 echo "Restarting IPFS with new configuration..."
-docker-compose restart ipfs
+docker compose restart ipfs
 sleep 10
 
 echo ""
 echo "Processing and pinning music files..."
-docker-compose run --rm liquidsoap python3 /scripts/prepare-music.py /music /data/processed || true
+docker compose run --rm liquidsoap python3 /src/liquidsoap/prepare-music.py /music /data/processed || true
+
+echo ""
+echo "Building playlist from config..."
+docker compose run --rm liquidsoap python3 /src/playlist/build-playlist.py /workspace/playlist.config.json /music /music/playlist.m3u || {
+    echo "Warning: Playlist build failed, continuing..."
+}
 
 echo ""
 echo "==================================="
@@ -81,7 +93,7 @@ echo "==================================="
 
 if [ ! -f data/state/ipns_keys.json ]; then
     echo "Creating IPNS keys for mutable playlists..."
-    docker-compose run --rm playlist-generator python3 /scripts/init-ipns.py
+    docker compose run --rm playlist-generator python3 /src/playlist-generator/init-ipns.py
     
     if [ -f data/state/ipns_keys.json ]; then
         echo ""
@@ -99,13 +111,13 @@ fi
 
 echo ""
 echo "Enabling IPFS PubSub..."
-docker-compose exec -T ipfs ipfs config --json Experimental.Libp2pStreamMounting true || true
-docker-compose exec -T ipfs ipfs config --json Pubsub.Enabled true || true
-docker-compose exec -T ipfs ipfs config Pubsub.Router gossipsub || true
+docker compose exec -T ipfs ipfs config --json Experimental.Libp2pStreamMounting true || true
+docker compose exec -T ipfs ipfs config --json Pubsub.Enabled true || true
+docker compose exec -T ipfs ipfs config Pubsub.Router gossipsub || true
 
 echo ""
 echo "Starting all services..."
-docker-compose up -d
+docker compose up -d
 
 echo ""
 echo "Waiting for services to initialize..."
@@ -132,8 +144,8 @@ echo "- Playlists published to IPNS (mutable)"
 echo "- Continuous streaming with permanent URLs"
 echo "- Access via: http://localhost:8080/ipns/YOUR_IPNS_NAME"
 echo ""
-echo "To view logs: docker-compose logs -f"
+echo "To view logs: docker compose logs -f"
 echo "To check IPNS keys: cat data/state/ipns_keys.json"
 echo "To check stream info: cat data/state/stream_info.json"
-echo "To stop: docker-compose down"
+echo "To stop: docker compose down"
 echo ""

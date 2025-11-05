@@ -3,5 +3,15 @@
     "chat.editing.autoAcceptDelay": 2,
     "chat.tools.terminal.autoApprove": {
         "/.*/": true
-    }
+    },
+    "vscode-color-picker.languages": [
+        "yaml",
+        "javascript",
+        "javascriptreact",
+        "typescript",
+        "typescriptreact",
+        "postcss",
+        "xml",
+        "html"
+    ]
 }

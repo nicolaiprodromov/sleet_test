@@ -37,7 +37,11 @@
         "GitHub.copilot",
         "GitHub.vscode-pull-request-github",
         "GitHub.github-vscode-theme",
-        "ms-vscode.vscode-websearchforcopilot"
+        "ms-vscode.vscode-websearchforcopilot",
+        "vittee.liquidsoap",
+        "naumovs.color-highlight",
+        "IBM.output-colorizer",
+        "MarkosTh09.color-picker"
       ],
       "settings": {
         "workbench.colorTheme": "GitHub Dark",
