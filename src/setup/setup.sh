@@ -84,7 +84,7 @@ initialize_ipns() {
     fi
     
     echo "Creating IPNS keys for mutable playlists..."
-    python3 /src/playlist-generator/init-ipns.py
+    STATE_DIR=/state python3 /src/playlist-generator/init-ipns.py
     
     if [ -f /state/ipns_keys.json ]; then
         echo ""

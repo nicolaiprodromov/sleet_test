@@ -1,11 +1,11 @@
 services:
   ipfs:
     image: ipfs/kubo:latest
-    container_name: sleetbubble-ipfs
+    container_name: sleetbubble-ipfs-${NODE_ID:-node1}
     ports:
-      - "4001:4001"
-      - "8080:8080"
-      - "5001:5001"
+      - "${IPFS_SWARM_PORT:-4001}:4001"
+      - "${IPFS_GATEWAY_PORT:-8080}:8080"
+      - "${IPFS_API_PORT:-5001}:5001"
     volumes:
       - ./data/ipfs:/data/ipfs
       - ./data/ipfs-staging:/export
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: src/setup/Dockerfile
     image: sleetbubble-setup:latest
-    container_name: sleetbubble-setup
+    container_name: sleetbubble-setup-${NODE_ID:-node1}
     depends_on:
       - ipfs
     volumes:
@@ -31,6 +31,7 @@ services:
       - ./playlist.config.json:/workspace/playlist.config.json
     environment:
       - IPFS_API=http://ipfs:5001
+      - STATE_DIR=/state
       - NODE_ID=${NODE_ID:-node1}
     restart: "no"
 
