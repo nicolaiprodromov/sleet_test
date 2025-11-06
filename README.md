@@ -25,18 +25,28 @@ This system streams audio entirely through IPFS using IPNS (InterPlanetary Name 
    cp your-music/* data/music/
    ```
 
-2. **Deploy the node**
+2. **Configure your node (optional)**
    ```bash
-   ./deploy.sh
+   # Copy example environment file
+   cp .env.example .env
+   
+   # Edit .env to customize NODE_ID and settings
+   nano .env
    ```
 
-   This will:
-   - Start IPFS node
-   - Initialize IPNS keys
-   - Start streaming services
-   - Display your permanent IPNS stream URLs
+3. **Start the node**
+   ```bash
+   docker compose up
+   ```
 
-3. **Access your stream**
+   The setup service will automatically:
+   - Configure IPFS with proper CORS headers
+   - Initialize IPNS keys
+   - Process and pin music files
+   - Build playlists from configuration
+   - Prepare all services for streaming
+
+4. **Access your stream**
    - IPFS Gateway: http://localhost:8080
    - Stream: http://localhost:8080/ipns/YOUR_IPNS_NAME
    - Stream Info: `cat data/state/stream_info.json`
@@ -68,16 +78,19 @@ https://dweb.link/ipns/k51qzi5uqu5d...
 
 ```bash
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # View specific service
-docker-compose logs -f playlist-generator
+docker compose logs -f playlist-generator
 
 # Stop node
-docker-compose down
+docker compose down
 
 # Restart node
-docker-compose restart
+docker compose restart
+
+# Restart just the setup (if needed)
+docker compose up setup
 
 # Check IPFS peers
 docker exec p2p-radio-ipfs ipfs swarm peers
