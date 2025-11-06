@@ -35,6 +35,17 @@ wait_for_ipfs() {
     return 1
 }
 
+copy_music() {
+    echo ""
+    echo "==================================="
+    echo "Copying Music from Source"
+    echo "==================================="
+    
+    python3 /src/setup/copy-music.py /workspace/playlist.config.json /music || {
+        echo "Warning: Music copy had issues, continuing..."
+    }
+}
+
 prepare_music() {
     echo ""
     echo "Checking music directory..."
@@ -107,6 +118,7 @@ create_setup_marker() {
 
 main() {
     if wait_for_ipfs; then
+        copy_music
         prepare_music
         build_playlist
         initialize_ipns

@@ -24,11 +24,11 @@ services:
     depends_on:
       - ipfs
     volumes:
+      - .:/workspace
       - ./data/music:/music
       - ./data/state:/state
       - ./data/processed:/data/processed
       - ./src:/src
-      - ./playlist.config.json:/workspace/playlist.config.json
     environment:
       - IPFS_API=http://ipfs:5001
       - STATE_DIR=/state

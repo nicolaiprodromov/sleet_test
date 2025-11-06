@@ -23,3 +23,5 @@ dist/
 build/
 *.log
 logs/
+
+playlist.config.json

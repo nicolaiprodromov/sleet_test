@@ -1,0 +1,15 @@
+{
+  "source": "audio/trax",
+  "mode": "ordered",
+  "tracks": [
+    "Drilling Profitably.mp3",
+    "Dritter Gesang.mp3",
+    "Earth In Turmoil.mp3",
+    "Edible Wallpaper.mp3"
+  ],
+  "options": {
+    "sort_alphabetically": false,
+    "shuffle_on_build": false,
+    "scan_subdirectories": true
+  }
+}

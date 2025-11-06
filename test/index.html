@@ -96,11 +96,15 @@
         
         <div class="gateway-switch">
             <label>
+                <input type="radio" name="gateway" value="proxy" id="gatewayProxy" checked>
+                <span>🔧 Reverse Proxy</span>
+            </label>
+            <label>
                 <input type="radio" name="gateway" value="local" id="gatewayLocal">
                 <span>🏠 Local Gateway</span>
             </label>
             <label>
-                <input type="radio" name="gateway" value="public" id="gatewayPublic" checked>
+                <input type="radio" name="gateway" value="public" id="gatewayPublic">
                 <span>🌍 Public Gateway</span>
             </label>
         </div>
@@ -126,29 +130,43 @@
         const currentUrlDiv = document.getElementById('currentUrl');
         const playBtn = document.getElementById('playBtn');
         const stopBtn = document.getElementById('stopBtn');
+        const gatewayProxy = document.getElementById('gatewayProxy');
         const gatewayLocal = document.getElementById('gatewayLocal');
         const gatewayPublic = document.getElementById('gatewayPublic');
         
-        const IPNS_KEY = 'k51qzi5uqu5dhcxfhv7v19pk5tjdxrc0xnzw6s1cjezec45kbl0dd9o7274z0q';
+        const IPNS_KEY = 'k51qzi5uqu5dkro9alfwgx57qxbyj6bl8q6bvwxyqci16ghgug82mm6ykzg3wg';
+        
+        const getProxyGatewayUrl = () => {
+            const hostname = window.location.hostname;
+            if (hostname.includes('app.github.dev')) {
+                const codespaceNameMatch = hostname.match(/([a-z0-9-]+)\.app\.github\.dev/);
+                if (codespaceNameMatch) {
+                    const baseUrl = hostname.replace(/\d+\.app\.github\.dev/, '8888.app.github.dev');
+                    return `https://${baseUrl}`;
+                }
+            }
+            return 'http://localhost:8888';
+        };
         
         const getLocalGatewayUrl = () => {
             const hostname = window.location.hostname;
             if (hostname.includes('app.github.dev')) {
                 const codespaceNameMatch = hostname.match(/([a-z0-9-]+)\.app\.github\.dev/);
                 if (codespaceNameMatch) {
-                    const codespaceName = codespaceNameMatch[1];
-                    return `https://effective-space-yodel-j77xjv749q7fqprr-8080.app.github.dev`;
+                    const baseUrl = hostname.replace(/\d+\.app\.github\.dev/, '8888.app.github.dev');
+                    return `https://${baseUrl}`;
                 }
             }
             return 'http://localhost:8080';
         };
         
         const GATEWAYS = {
+            proxy: `${getProxyGatewayUrl()}/ipns/${IPNS_KEY}`,
             local: `${getLocalGatewayUrl()}/ipns/${IPNS_KEY}`,
             public: `https://ipfs.io/ipns/${IPNS_KEY}`
         };
         
-        let currentGateway = 'public';
+        let currentGateway = 'proxy';
         let hls = null;
         let isPlaying = false;
 
@@ -312,6 +330,13 @@
             e.preventDefault();
             e.stopPropagation();
             stopStream();
+        });
+        
+        gatewayProxy.addEventListener('change', function(e) {
+            e.preventDefault();
+            if (this.checked) {
+                switchGateway('proxy');
+            }
         });
         
         gatewayLocal.addEventListener('change', function(e) {

@@ -13,7 +13,7 @@
 
   "forwardPorts": [
     80, 81, 443, 444,
-    5500,
+    5500, 8888,
     8080, 8081,
     5001, 5002,
     4001, 4002
@@ -23,6 +23,7 @@
     "80":   { "label": "Main Web Player",     "onAutoForward": "notify", "visibility": "public" },
     "81":   { "label": "Node 2 Web Player",   "onAutoForward": "notify", "visibility": "public" },
     "5500": { "label": "Web Player",          "onAutoForward": "openBrowser", "visibility": "public" },
+    "8888": { "label": "IPFS CORS Proxy",     "onAutoForward": "notify", "visibility": "public" },
     "443":  { "label": "HTTPS Main",          "onAutoForward": "silent", "visibility": "public" },
     "444":  { "label": "HTTPS Node 2",        "onAutoForward": "silent", "visibility": "public" },
     "8080": { "label": "IPFS Gateway Node 1", "onAutoForward": "notify", "visibility": "public" },
@@ -33,7 +34,7 @@
     "4002": { "label": "IPFS Swarm Node 2",   "onAutoForward": "silent", "visibility": "public" }
   },
 
-  "postStartCommand": "docker rm -f sleetbubble-test-frontend 2>/dev/null || true && docker run -d --name sleetbubble-test-frontend -p 5500:5500 -v /workspaces/sleet_test/test:/app:ro --restart unless-stopped sleetbubble-test-web",
+  "postStartCommand": "docker run -d --name sleetbubble-test-web --network sleet_test_default -p 5500:5500 -p 8888:8888 -v /workspaces/sleet_test/test:/app:ro --restart unless-stopped sleetbubble-test-web",
 
   "customizations": {
     "vscode": {

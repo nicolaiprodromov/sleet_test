@@ -1,10 +1,12 @@
-FROM python:3.12-alpine
+FROM nginx:alpine
 
 WORKDIR /app
 
 COPY index.html /app/
-COPY serve.py /app/
+COPY nginx.conf /etc/nginx/nginx.conf
 
-EXPOSE 5500
+RUN mkdir -p /run/nginx /var/log/nginx
 
-CMD ["python3", "serve.py"]
+EXPOSE 5500 8888
+
+CMD ["nginx", "-g", "daemon off;"]
