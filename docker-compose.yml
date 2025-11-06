@@ -174,4 +174,32 @@ services:
     command: python3 /src/segment-cleanup/cleanup-old-segments.py
     restart: unless-stopped
 
+  config-page:
+    build:
+      context: .
+      dockerfile: src/config-page/Dockerfile
+      cache_from:
+        - sleetbubble-config-page:latest
+    image: sleetbubble-config-page:latest
+    container_name: sleetbubble-config-page
+    depends_on:
+      setup:
+        condition: service_completed_successfully
+      ipfs:
+        condition: service_started
+      liquidsoap:
+        condition: service_started
+      uploader:
+        condition: service_started
+      playlist:
+        condition: service_started
+    ports:
+      - "${CONFIG_PAGE_PORT:-5500}:5500"
+      - "${IPFS_CORS_PROXY_PORT:-8888}:8888"
+    volumes:
+      - ./src/config-page/index.html:/app/index.html:ro
+      - ./data/state:/state:ro
+      - ./data/music:/music:ro
+    restart: unless-stopped
+
 

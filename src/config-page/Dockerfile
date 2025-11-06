@@ -2,8 +2,8 @@ FROM nginx:alpine
 
 WORKDIR /app
 
-COPY index.html /app/
-COPY nginx.conf /etc/nginx/nginx.conf
+COPY src/config-page/index.html /app/
+COPY src/config-page/nginx.conf /etc/nginx/nginx.conf
 
 RUN mkdir -p /run/nginx /var/log/nginx
 

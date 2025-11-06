@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SleetBubble Control Panel</title>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-extra.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+    <style>
+        :root {
+            --dark-bg: #0a0a0a;
+            --dark-surface: #151515;
+            --dark-card: #1a1a1a;
+            --dark-card-hover: #222222;
+            --red-accent: #ef4444;
+            --red-dark: #dc2626;
+            --red-glow: rgba(239, 68, 68, 0.3);
+            --grey-text: #9ca3af;
+            --grey-light: #d1d5db;
+            --white-text: #f9fafb;
+            --border-color: rgba(255, 255, 255, 0.08);
+            --green-success: #10b981;
+            --orange-warning: #f59e0b;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', sans-serif;
+            background: var(--dark-bg);
+            color: var(--white-text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            scrollbar-width: none;
+        }
+        
+        body::-webkit-scrollbar {
+            display: none;
+        }
+        
+        * {
+            scrollbar-width: none;
+        }
+        
+        *::-webkit-scrollbar {
+            display: none;
+        }
+        
+        div {
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+        
+        div::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, var(--dark-surface) 0%, #1a1a1a 100%);
+            padding: 24px 32px;
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            backdrop-filter: blur(10px);
+        }
+        
+        .header-content {
+            max-width: 1920px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .logo {
+            font-size: 28px;
+        }
+        
+        .header-title {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--red-accent) 0%, #fb923c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -0.5px;
+        }
+        
+        .subtitle {
+            font-size: 13px;
+            color: var(--grey-text);
+            font-weight: 500;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--red-accent) 0%, var(--red-dark) 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px var(--red-glow);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px var(--red-glow);
+        }
+        
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-color);
+            box-shadow: none;
+        }
+        
+        .btn-outline:hover {
+            background: var(--dark-card);
+            border-color: var(--red-accent);
+        }
+        
+        .grid-stack {
+            background: transparent;
+            min-height: calc(100vh - 100px);
+            padding: 24px;
+        }
+        
+        .grid-stack-item-content {
+            background: var(--dark-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            overflow: hidden;
+            transition: all 0.3s;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+        }
+        
+        .grid-stack-item-content:hover {
+            border-color: rgba(239, 68, 68, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+        
+        .ui-resizable-handle {
+            background: var(--red-accent) !important;
+            opacity: 0 !important;
+            transition: opacity 0.3s !important;
+        }
+        
+        .grid-stack-item:hover .ui-resizable-handle {
+            opacity: 0.6 !important;
+        }
+        
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid rgba(239, 68, 68, 0.2);
+            cursor: move;
+        }
+        
+        .panel-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--white-text);
+        }
+        
+        .panel-title i {
+            color: var(--red-accent);
+            font-size: 24px;
+        }
+        
+        .badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .badge.online {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--green-success);
+            border: 1px solid var(--green-success);
+        }
+        
+        .badge.offline {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--red-accent);
+            border: 1px solid var(--red-accent);
+        }
+        
+        .badge.loading {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--orange-warning);
+            border: 1px solid var(--orange-warning);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            color: var(--grey-text);
+            font-weight: 500;
+        }
+        
+        .info-value {
+            color: var(--grey-light);
+            font-family: 'SF Mono', 'Courier New', monospace;
+            font-size: 13px;
+            text-align: right;
+            word-break: break-all;
+            max-width: 60%;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            transition: all 0.3s;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--red-accent);
+            box-shadow: 0 4px 16px var(--red-glow);
+        }
+        
+        .metric-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--red-accent);
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .metric-label {
+            font-size: 11px;
+            color: var(--grey-text);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+        
+        .playlist-items {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 12px;
+            scrollbar-width: none;
+        }
+        
+        .playlist-items::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .playlist-item {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            margin-bottom: 6px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        
+        .playlist-item:hover {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+        }
+        
+        .track-number {
+            font-weight: 700;
+            color: var(--red-accent);
+            min-width: 32px;
+            font-size: 14px;
+        }
+        
+        .track-name {
+            flex: 1;
+            font-size: 13px;
+            color: var(--grey-light);
+        }
+        
+        .gateway-switch {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 16px 0;
+        }
+        
+        .gateway-option input[type="radio"] {
+            display: none;
+        }
+        
+        .gateway-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .gateway-label i {
+            font-size: 28px;
+            color: var(--grey-text);
+            transition: all 0.3s;
+        }
+        
+        .gateway-option input[type="radio"]:checked + .gateway-label {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.1) 100%);
+            border-color: var(--red-accent);
+            box-shadow: 0 4px 16px var(--red-glow);
+        }
+        
+        .gateway-option input[type="radio"]:checked + .gateway-label i {
+            color: var(--red-accent);
+        }
+        
+        .gateway-label:hover {
+            border-color: var(--red-accent);
+            transform: translateY(-2px);
+        }
+        
+        video {
+            width: 100%;
+            border-radius: 8px;
+            background: #000;
+            margin: 16px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        .controls .btn {
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .url-box {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            border-radius: 6px;
+            font-family: 'SF Mono', 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--red-accent);
+            word-break: break-all;
+            margin-top: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            position: relative;
+        }
+        
+        .url-box:hover {
+            background: rgba(0, 0, 0, 0.6);
+            border-color: var(--red-accent);
+            box-shadow: 0 4px 16px var(--red-glow);
+        }
+        
+        .copy-indicator {
+            position: absolute;
+            top: 50%;
+            right: 12px;
+            transform: translateY(-50%);
+            color: var(--green-success);
+            font-size: 12px;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .copy-indicator.show {
+            opacity: 1;
+        }
+        
+        .stream-url {
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 6px;
+            font-family: 'SF Mono', 'Courier New', monospace;
+            font-size: 12px;
+            color: var(--grey-text);
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+        
+        .panel-btn {
+            padding: 8px 16px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--red-accent);
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            justify-content: center;
+            transition: all 0.3s;
+            margin-top: 12px;
+        }
+        
+        .panel-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--red-accent);
+            box-shadow: 0 2px 8px var(--red-glow);
+        }
+        
+        .plyr {
+            --plyr-color-main: #ef4444;
+            --plyr-video-background: #000000;
+            --plyr-menu-background: #1a1a1a;
+            --plyr-menu-color: #f9fafb;
+            --plyr-video-controls-background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0.75));
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .plyr--video {
+            border-radius: 8px;
+        }
+        
+        .plyr__control--overlaid {
+            background: linear-gradient(135deg, var(--red-accent) 0%, var(--red-dark) 100%);
+            border-radius: 50%;
+            box-shadow: 0 4px 16px var(--red-glow);
+        }
+        
+        .plyr__control--overlaid:hover {
+            background: var(--red-accent);
+            transform: scale(1.1);
+        }
+        
+        .plyr__control--overlaid:focus {
+            background: var(--red-dark);
+        }
+        
+        .plyr__menu__container {
+            background: var(--dark-card);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+        }
+        
+        .plyr__menu__container label {
+            color: var(--grey-light);
+        }
+        
+        .plyr__menu__container input[type='radio']:checked + label {
+            color: var(--red-accent);
+        }
+        
+        .plyr__progress__buffer {
+            color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .plyr--full-ui input[type='range'] {
+            color: var(--red-accent);
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                padding: 16px 20px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .grid-stack {
+                padding: 12px;
+            }
+            
+            .gateway-switch {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo">🎵</div>
+                <div class="header-title">
+                    <h1>SleetBubble Control Panel</h1>
+                    <div class="subtitle">Decentralized P2P Radio Streaming Platform</div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn btn-outline" onclick="resetLayout()">
+                    <i class="material-icons">refresh</i>
+                    Reset Layout
+                </button>
+                <button class="btn" onclick="saveLayout()">
+                    <i class="material-icons">save</i>
+                    Save Layout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-stack">
+        <div class="grid-stack-item" gs-w="4" gs-h="3" gs-x="0" gs-y="0">
+            <div class="grid-stack-item-content">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="material-icons">computer</i>
+                        Node Status
+                    </div>
+                    <span id="nodeStatus" class="badge loading">Loading</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Node ID:</span>
+                    <span class="info-value" id="nodeId">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">IPFS Peer ID:</span>
+                    <span class="info-value" id="ipfsPeerId">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">IPFS Version:</span>
+                    <span class="info-value" id="ipfsVersion">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Connected Peers:</span>
+                    <span class="info-value" id="peerCount">-</span>
+                </div>
+                <button class="panel-btn" onclick="refreshNodeStatus()">
+                    <i class="material-icons">refresh</i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="grid-stack-item" gs-w="4" gs-h="3" gs-x="4" gs-y="0">
+            <div class="grid-stack-item-content">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="material-icons">cast</i>
+                        Stream Info
+                    </div>
+                    <span id="streamStatus" class="badge loading">Loading</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Master IPNS:</span>
+                    <span class="info-value" id="masterIpns">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Stream IPNS:</span>
+                    <span class="info-value" id="streamIpns">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Latest CID:</span>
+                    <span class="info-value" id="latestCid">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Last Update:</span>
+                    <span class="info-value" id="lastUpdate">-</span>
+                </div>
+                <button class="panel-btn" onclick="refreshStreamInfo()">
+                    <i class="material-icons">refresh</i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="grid-stack-item" gs-w="4" gs-h="3" gs-x="8" gs-y="0">
+            <div class="grid-stack-item-content">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="material-icons">assessment</i>
+                        Metrics
+                    </div>
+                </div>
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <span class="metric-value" id="segmentCount">-</span>
+                        <span class="metric-label">Segments</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="tracksCount">-</span>
+                        <span class="metric-label">Tracks</span>
+                    </div>
+                    <div class="metric-card">
+                        <span class="metric-value" id="repoSize">-</span>
+                        <span class="metric-label">Size</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-stack-item" gs-w="4" gs-h="4" gs-x="0" gs-y="3">
+            <div class="grid-stack-item-content">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="material-icons">library_music</i>
+                        Playlist
+                    </div>
+                </div>
+                <div id="playlistInfo" style="font-size: 14px; color: var(--grey-text); margin-bottom: 12px;">Loading...</div>
+                <div id="playlistItems" class="playlist-items"></div>
+                <button class="panel-btn" onclick="refreshPlaylist()">
+                    <i class="material-icons">refresh</i>
+                    Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="grid-stack-item" gs-w="4" gs-h="4" gs-x="4" gs-y="3">
+            <div class="grid-stack-item-content">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="material-icons">link</i>
+                        Access URLs
+                    </div>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">IPFS Gateway:</span>
+                    <span class="info-value" id="gatewayUrl">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">IPFS API:</span>
+                    <span class="info-value" id="apiUrl">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Swarm:</span>
+                    <span class="info-value" id="swarmUrl">-</span>
+                </div>
+                <div style="margin-top: 16px;">
+                    <strong style="font-size: 13px; color: var(--grey-text);">Public Stream URL:</strong>
+                    <div class="url-box" onclick="copyToClipboard(this.querySelector('#publicStreamUrl').textContent, this)">
+                        <span id="publicStreamUrl">Loading...</span>
+                        <span class="copy-indicator">✓ Copied!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-stack-item" gs-w="4" gs-h="4" gs-x="8" gs-y="3">
+            <div class="grid-stack-item-content">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="material-icons">settings</i>
+                        Configuration
+                    </div>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Update Interval:</span>
+                    <span class="info-value" id="updateInterval">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Max Segments:</span>
+                    <span class="info-value" id="maxSegments">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">IPNS Lifetime:</span>
+                    <span class="info-value" id="ipnsLifetime">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">IPNS TTL:</span>
+                    <span class="info-value" id="ipnsTtl">-</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Playlist Mode:</span>
+                    <span class="info-value" id="playlistMode">-</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid-stack-item" gs-w="12" gs-h="5" gs-x="0" gs-y="7">
+            <div class="grid-stack-item-content">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <i class="material-icons">play_circle</i>
+                        Live Stream Player
+                    </div>
+                    <span id="playerStatus" class="badge loading">Ready</span>
+                </div>
+                
+                <div class="gateway-switch">
+                    <div class="gateway-option">
+                        <input type="radio" name="gateway" value="proxy" id="gatewayProxy" checked>
+                        <label for="gatewayProxy" class="gateway-label">
+                            <i class="material-icons">build</i>
+                            Reverse Proxy
+                        </label>
+                    </div>
+                    <div class="gateway-option">
+                        <input type="radio" name="gateway" value="local" id="gatewayLocal">
+                        <label for="gatewayLocal" class="gateway-label">
+                            <i class="material-icons">home</i>
+                            Local Gateway
+                        </label>
+                    </div>
+                    <div class="gateway-option">
+                        <input type="radio" name="gateway" value="public" id="gatewayPublic">
+                        <label for="gatewayPublic" class="gateway-label">
+                            <i class="material-icons">public</i>
+                            Public Gateway
+                        </label>
+                    </div>
+                </div>
+                
+                <video id="player" controls playsinline></video>
+                
+                <div class="controls">
+                    <button class="btn" onclick="playStream()">
+                        <i class="material-icons">play_arrow</i>
+                        Play Stream
+                    </button>
+                    <button class="btn btn-outline" onclick="stopStream()">
+                        <i class="material-icons">stop</i>
+                        Stop
+                    </button>
+                </div>
+                
+                <div class="stream-url" id="currentStreamUrl">Select gateway and click Play</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/gridstack@10.3.1/dist/gridstack-all.js"></script>
+    <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js"></script>
+    <script>
+        let grid;
+        const videoElement = document.getElementById('player');
+        let player;
+        let currentGateway = 'proxy';
+        let hls = null;
+        let isPlaying = false;
+        let streamIpnsKey = null;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            player = new Plyr('#player', {
+                controls: ['play-large', 'play', 'progress', 'current-time', 'mute', 'volume', 'settings', 'fullscreen'],
+                settings: ['quality', 'speed'],
+                quality: {
+                    default: 'auto',
+                    options: ['auto']
+                },
+                speed: {
+                    selected: 1,
+                    options: [0.5, 0.75, 1, 1.25, 1.5, 2]
+                }
+            });
+            
+            grid = GridStack.init({
+                cellHeight: 80,
+                margin: 12,
+                float: false,
+                animate: true,
+                disableResize: false,
+                draggable: {
+                    handle: '.panel-header'
+                }
+            });
+            
+            loadLayout();
+            initializeDashboard();
+        });
+        
+        function saveLayout() {
+            const layout = grid.save();
+            localStorage.setItem('sleetbubble-layout', JSON.stringify(layout));
+            showNotification('Layout saved successfully!');
+        }
+        
+        function loadLayout() {
+            const savedLayout = localStorage.getItem('sleetbubble-layout');
+            if (savedLayout) {
+                grid.load(JSON.parse(savedLayout));
+            }
+        }
+        
+        function resetLayout() {
+            localStorage.removeItem('sleetbubble-layout');
+            location.reload();
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 100px;
+                right: 32px;
+                background: linear-gradient(135deg, var(--red-accent), var(--red-dark));
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 16px var(--red-glow);
+                z-index: 10000;
+                font-weight: 600;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        const getBaseUrl = () => {
+            const hostname = window.location.hostname;
+            if (hostname.includes('app.github.dev')) {
+                return hostname.replace(/\d+\.app\.github\.dev/, '');
+            }
+            return 'localhost';
+        };
+        
+        const getProxyUrl = (port) => {
+            const hostname = window.location.hostname;
+            if (hostname.includes('app.github.dev')) {
+                const base = getBaseUrl();
+                return `https://${base}${port}.app.github.dev`;
+            }
+            return `http://localhost:${port}`;
+        };
+        
+        const GATEWAYS = {
+            proxy: () => `${getProxyUrl(8888)}/ipns/${streamIpnsKey}`,
+            local: () => `${getProxyUrl(8080)}/ipns/${streamIpnsKey}`,
+            public: () => `https://ipfs.io/ipns/${streamIpnsKey}`
+        };
+        
+        async function fetchIPFSApi(endpoint, params = {}) {
+            try {
+                const url = new URL(`${getProxyUrl(8888)}/api/v0/${endpoint}`);
+                Object.entries(params).forEach(([key, value]) => {
+                    url.searchParams.append(key, value);
+                });
+                
+                const response = await fetch(url, { method: 'POST' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error(`IPFS API error (${endpoint}):`, error);
+                return null;
+            }
+        }
+        
+        async function fetchState(filename) {
+            try {
+                const response = await fetch(`${getProxyUrl(8888)}/state/${filename}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return await response.json();
+            } catch (error) {
+                console.error(`State file error (${filename}):`, error);
+                return null;
+            }
+        }
+        
+        async function refreshNodeStatus() {
+            const badge = document.getElementById('nodeStatus');
+            badge.textContent = 'Loading';
+            badge.className = 'badge loading';
+            
+            const idData = await fetchIPFSApi('id');
+            if (idData) {
+                document.getElementById('ipfsPeerId').textContent = idData.ID || '-';
+                document.getElementById('ipfsVersion').textContent = idData.AgentVersion || '-';
+                badge.textContent = 'Online';
+                badge.className = 'badge online';
+            } else {
+                badge.textContent = 'Offline';
+                badge.className = 'badge offline';
+            }
+            
+            const peersData = await fetchIPFSApi('swarm/peers');
+            if (peersData && peersData.Peers) {
+                document.getElementById('peerCount').textContent = peersData.Peers.length;
+            }
+            
+            const statsData = await fetchIPFSApi('repo/stat');
+            if (statsData) {
+                const sizeInMB = (statsData.RepoSize / 1024 / 1024).toFixed(2);
+                document.getElementById('repoSize').textContent = `${sizeInMB}M`;
+            }
+            
+            document.getElementById('nodeId').textContent = 'node-1';
+            document.getElementById('gatewayUrl').textContent = getProxyUrl(8080);
+            document.getElementById('apiUrl').textContent = getProxyUrl(5001);
+            document.getElementById('swarmUrl').textContent = getProxyUrl(4001);
+        }
+        
+        async function refreshStreamInfo() {
+            const badge = document.getElementById('streamStatus');
+            badge.textContent = 'Loading';
+            badge.className = 'badge loading';
+            
+            const streamInfo = await fetchState('stream_info.json');
+            if (streamInfo) {
+                document.getElementById('masterIpns').textContent = streamInfo.master_playlist_ipns || '-';
+                document.getElementById('streamIpns').textContent = streamInfo.stream_playlist_ipns || '-';
+                document.getElementById('latestCid').textContent = streamInfo.stream_playlist_ipns ? 
+                    streamInfo.stream_playlist_ipns.substring(0, 20) + '...' : '-';
+                document.getElementById('lastUpdate').textContent = streamInfo.updated_at || '-';
+                
+                streamIpnsKey = streamInfo.stream_playlist_ipns;
+                document.getElementById('publicStreamUrl').textContent = 
+                    `https://ipfs.io/ipns/${streamInfo.stream_playlist_ipns}`;
+                
+                badge.textContent = 'Active';
+                badge.className = 'badge online';
+            } else {
+                badge.textContent = 'No Data';
+                badge.className = 'badge offline';
+            }
+            
+            const segments = await fetchState('ipfs_segments.json');
+            if (segments) {
+                document.getElementById('segmentCount').textContent = Object.keys(segments).length;
+            }
+            
+            document.getElementById('updateInterval').textContent = '2s';
+            document.getElementById('maxSegments').textContent = '50';
+            document.getElementById('ipnsLifetime').textContent = '24h';
+            document.getElementById('ipnsTtl').textContent = '5s';
+        }
+        
+        async function refreshPlaylist() {
+            document.getElementById('playlistInfo').textContent = 'Loading...';
+            document.getElementById('playlistItems').innerHTML = '';
+            
+            try {
+                const response = await fetch(`${getProxyUrl(8888)}/music/playlist.m3u`);
+                if (!response.ok) throw new Error('Playlist not found');
+                
+                const text = await response.text();
+                const lines = text.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+                
+                document.getElementById('tracksCount').textContent = lines.length;
+                document.getElementById('playlistInfo').textContent = `${lines.length} tracks`;
+                document.getElementById('playlistMode').textContent = 'ordered';
+                
+                const container = document.getElementById('playlistItems');
+                lines.forEach((track, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'playlist-item';
+                    item.innerHTML = `
+                        <span class="track-number">${index + 1}</span>
+                        <span class="track-name">${track.split('/').pop()}</span>
+                    `;
+                    container.appendChild(item);
+                });
+            } catch (error) {
+                document.getElementById('playlistInfo').textContent = 'Failed to load';
+                console.error('Playlist error:', error);
+            }
+        }
+        
+        function copyToClipboard(text, element) {
+            navigator.clipboard.writeText(text).then(() => {
+                const indicator = element.querySelector('.copy-indicator');
+                indicator.classList.add('show');
+                setTimeout(() => indicator.classList.remove('show'), 2000);
+            });
+        }
+        
+        function switchGateway(gateway) {
+            if (currentGateway === gateway) return;
+            currentGateway = gateway;
+            updatePlayerStatus('Gateway switched', 'loading');
+            if (isPlaying) stopStream();
+        }
+        
+        function updatePlayerStatus(message, type) {
+            const status = document.getElementById('playerStatus');
+            status.textContent = message;
+            status.className = `badge ${type}`;
+            document.getElementById('currentStreamUrl').textContent = message;
+        }
+        
+        function playStream() {
+            if (!streamIpnsKey) {
+                updatePlayerStatus('Not Ready', 'loading');
+                return;
+            }
+            
+            if (isPlaying) {
+                player.play();
+                return;
+            }
+            
+            const streamUrl = GATEWAYS[currentGateway]();
+            updatePlayerStatus('Loading...', 'loading');
+            
+            if (typeof Hls === 'undefined') {
+                updatePlayerStatus('Error', 'offline');
+                return;
+            }
+            
+            if (Hls.isSupported()) {
+                if (hls) {
+                    try { hls.destroy(); } catch(e) {}
+                    hls = null;
+                }
+                
+                hls = new Hls({
+                    debug: false,
+                    enableWorker: true,
+                    liveSyncDurationCount: 3,
+                    liveMaxLatencyDurationCount: 10,
+                    liveDurationInfinity: true,
+                    maxBufferLength: 60,
+                    maxMaxBufferLength: 120,
+                    backBufferLength: 30,
+                    manifestLoadingTimeOut: 20000,
+                    manifestLoadingMaxRetry: 10,
+                    manifestLoadingRetryDelay: 1000,
+                    xhrSetup: function(xhr, url) {
+                        xhr.withCredentials = false;
+                    }
+                });
+                
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    if (data.fatal) {
+                        switch(data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                updatePlayerStatus('Network Error', 'loading');
+                                setTimeout(() => hls && hls.startLoad(), 1000);
+                                break;
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                updatePlayerStatus('Media Error', 'loading');
+                                try { hls.recoverMediaError(); } catch(e) {
+                                    isPlaying = false;
+                                    updatePlayerStatus('Fatal Error', 'offline');
+                                }
+                                break;
+                            default:
+                                updatePlayerStatus('Fatal Error', 'offline');
+                                isPlaying = false;
+                                break;
+                        }
+                    }
+                });
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    updatePlayerStatus('Playing', 'online');
+                    isPlaying = true;
+                    player.play().catch(e => {
+                        updatePlayerStatus('Click Play', 'loading');
+                    });
+                });
+                
+                hls.loadSource(streamUrl);
+                hls.attachMedia(videoElement);
+                
+            } else if (videoElement.canPlayType('application/vnd.apple.mpegurl')) {
+                videoElement.src = streamUrl;
+                isPlaying = true;
+                player.play().catch(e => console.error('Play error:', e));
+            } else {
+                updatePlayerStatus('Not Supported', 'offline');
+            }
+        }
+        
+        function stopStream() {
+            isPlaying = false;
+            player.pause();
+            if (hls) {
+                try { hls.destroy(); } catch(e) {}
+                hls = null;
+            }
+            updatePlayerStatus('Stopped', 'loading');
+        }
+        
+        document.querySelectorAll('input[name="gateway"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if (e.target.checked) switchGateway(e.target.value);
+            });
+        });
+        
+        async function initializeDashboard() {
+            updatePlayerStatus('Ready', 'loading');
+            await refreshNodeStatus();
+            await refreshStreamInfo();
+            await refreshPlaylist();
+        }
+        
+        setInterval(() => {
+            refreshNodeStatus();
+            refreshStreamInfo();
+        }, 10000);
+    </script>
+</body>
+</html>

@@ -9,7 +9,7 @@
     }
   },
 
-  "postCreateCommand": "wget -q https://dist.ipfs.tech/kubo/v0.31.0/kubo_v0.31.0_linux-amd64.tar.gz -O /tmp/ipfs.tar.gz && tar -xzf /tmp/ipfs.tar.gz -C /tmp && sudo bash /tmp/kubo/install.sh && rm -rf /tmp/kubo /tmp/ipfs.tar.gz && docker build -t sleetbubble-test-web /workspaces/sleet_test/test",
+  "postCreateCommand": "wget -q https://dist.ipfs.tech/kubo/v0.31.0/kubo_v0.31.0_linux-amd64.tar.gz -O /tmp/ipfs.tar.gz && tar -xzf /tmp/ipfs.tar.gz -C /tmp && sudo bash /tmp/kubo/install.sh && rm -rf /tmp/kubo /tmp/ipfs.tar.gz",
 
   "forwardPorts": [
     80, 81, 443, 444,
@@ -20,21 +20,12 @@
   ],
 
   "portsAttributes": {
-    "80":   { "label": "Main Web Player",     "onAutoForward": "notify", "visibility": "public" },
-    "81":   { "label": "Node 2 Web Player",   "onAutoForward": "notify", "visibility": "public" },
-    "5500": { "label": "Web Player",          "onAutoForward": "openBrowser", "visibility": "public" },
-    "8888": { "label": "IPFS CORS Proxy",     "onAutoForward": "notify", "visibility": "public" },
-    "443":  { "label": "HTTPS Main",          "onAutoForward": "silent", "visibility": "public" },
-    "444":  { "label": "HTTPS Node 2",        "onAutoForward": "silent", "visibility": "public" },
-    "8080": { "label": "IPFS Gateway Node 1", "onAutoForward": "notify", "visibility": "public" },
-    "8081": { "label": "IPFS Gateway Node 2", "onAutoForward": "notify", "visibility": "public" },
-    "5001": { "label": "IPFS API Node 1",     "onAutoForward": "silent", "visibility": "private" },
-    "5002": { "label": "IPFS API Node 2",     "onAutoForward": "silent", "visibility": "private" },
-    "4001": { "label": "IPFS Swarm Node 1",   "onAutoForward": "silent", "visibility": "public" },
-    "4002": { "label": "IPFS Swarm Node 2",   "onAutoForward": "silent", "visibility": "public" }
-  },
-
-  "postStartCommand": "docker run -d --name sleetbubble-test-web --network sleet_test_default -p 5500:5500 -p 8888:8888 -v /workspaces/sleet_test/test:/app:ro --restart unless-stopped sleetbubble-test-web",
+    "5500": { "label": "Control Panel", "onAutoForward": "openBrowser", "visibility": "public" },
+    "8888": { "label": "IPFS CORS Proxy", "onAutoForward": "notify", "visibility": "public" },
+    "8080": { "label": "IPFS Gateway", "onAutoForward": "notify", "visibility": "public" },
+    "5001": { "label": "IPFS API",     "onAutoForward": "silent", "visibility": "public" },
+    "4001": { "label": "IPFS Swarm",   "onAutoForward": "silent", "visibility": "public" }
+    },
 
   "customizations": {
     "vscode": {
