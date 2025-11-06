@@ -72,6 +72,12 @@ echo "Configuring IPFS for Docker networking..."
 docker exec p2p-radio-ipfs ipfs config Addresses.API /ip4/0.0.0.0/tcp/5001
 docker exec p2p-radio-ipfs ipfs config Addresses.Gateway /ip4/0.0.0.0/tcp/8080
 
+echo "Configuring CORS headers..."
+docker exec p2p-radio-ipfs ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
+docker exec p2p-radio-ipfs ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST", "PUT"]'
+docker exec p2p-radio-ipfs ipfs config --json API.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
+docker exec p2p-radio-ipfs ipfs config --json API.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST", "PUT"]'
+
 echo "Restarting IPFS with new configuration..."
 docker compose restart ipfs
 sleep 10

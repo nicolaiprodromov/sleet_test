@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SleetBubble Radio</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 2rem;
+            max-width: 800px;
+        }
+        h1 {
+            margin-bottom: 1rem;
+        }
+        .gateway-switch {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #2a2a2a;
+            border-radius: 8px;
+        }
+        .gateway-switch label {
+            margin: 0 1rem;
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            background: #3a3a3a;
+            border-radius: 4px;
+            display: inline-block;
+        }
+        .gateway-switch input[type="radio"] {
+            margin-right: 0.5rem;
+        }
+        .gateway-switch input[type="radio"]:checked + span {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .status {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #2a2a2a;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .status.loading {
+            color: #ffa500;
+        }
+        .status.playing {
+            color: #00ff00;
+        }
+        .status.error {
+            color: #ff0000;
+        }
+        video {
+            width: 100%;
+            max-width: 600px;
+            border-radius: 8px;
+            background: #000;
+        }
+        .controls {
+            margin-top: 1rem;
+        }
+        button {
+            padding: 0.5rem 1rem;
+            margin: 0.5rem;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .stream-url {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: #888;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎵 SleetBubble Radio</h1>
+        
+        <div class="gateway-switch">
+            <label>
+                <input type="radio" name="gateway" value="local" id="gatewayLocal">
+                <span>🏠 Local Gateway</span>
+            </label>
+            <label>
+                <input type="radio" name="gateway" value="public" id="gatewayPublic" checked>
+                <span>🌍 Public Gateway</span>
+            </label>
+        </div>
+        
+        <div id="status" class="status loading">Ready to play</div>
+        <video id="player" controls></video>
+        <div class="controls">
+            <button id="playBtn">▶️ Play</button>
+            <button id="stopBtn">⏹️ Stop</button>
+        </div>
+        <div class="stream-url" id="currentUrl"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.20/dist/hls.min.js"></script>
+    <script>
+        // Prevent any accidental form submissions or navigation
+        window.addEventListener('beforeunload', function(e) {
+            console.log('Page attempting to unload');
+        });
+
+        const video = document.getElementById('player');
+        const status = document.getElementById('status');
+        const currentUrlDiv = document.getElementById('currentUrl');
+        const playBtn = document.getElementById('playBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const gatewayLocal = document.getElementById('gatewayLocal');
+        const gatewayPublic = document.getElementById('gatewayPublic');
+        
+        const IPNS_KEY = 'k51qzi5uqu5dhcxfhv7v19pk5tjdxrc0xnzw6s1cjezec45kbl0dd9o7274z0q';
+        
+        const getLocalGatewayUrl = () => {
+            const hostname = window.location.hostname;
+            if (hostname.includes('app.github.dev')) {
+                const codespaceNameMatch = hostname.match(/([a-z0-9-]+)\.app\.github\.dev/);
+                if (codespaceNameMatch) {
+                    const codespaceName = codespaceNameMatch[1];
+                    return `https://effective-space-yodel-j77xjv749q7fqprr-8080.app.github.dev`;
+                }
+            }
+            return 'http://localhost:8080';
+        };
+        
+        const GATEWAYS = {
+            local: `${getLocalGatewayUrl()}/ipns/${IPNS_KEY}`,
+            public: `https://ipfs.io/ipns/${IPNS_KEY}`
+        };
+        
+        let currentGateway = 'public';
+        let hls = null;
+        let isPlaying = false;
+
+        function updateStatus(message, type) {
+            status.textContent = message;
+            status.className = 'status ' + type;
+            console.log(`[Status] ${message}`);
+        }
+        
+        function updateCurrentUrl() {
+            currentUrlDiv.textContent = `Stream: ${GATEWAYS[currentGateway]}`;
+        }
+        
+        function switchGateway(gateway) {
+            console.log('Switching gateway to:', gateway);
+            if (currentGateway === gateway) return;
+            
+            currentGateway = gateway;
+            updateStatus('Gateway switched. Click Play to load.', 'loading');
+            updateCurrentUrl();
+            
+            if (isPlaying) {
+                stopStream();
+            }
+        }
+
+        function playStream() {
+            console.log('Play button clicked');
+            
+            if (isPlaying) {
+                console.log('Already playing');
+                video.play();
+                return;
+            }
+            
+            const streamUrl = GATEWAYS[currentGateway];
+            updateCurrentUrl();
+            updateStatus(`Loading ${currentGateway} gateway...`, 'loading');
+            console.log('Loading stream:', streamUrl);
+            
+            if (typeof Hls === 'undefined') {
+                updateStatus('HLS library not loaded', 'error');
+                return;
+            }
+            
+            if (Hls.isSupported()) {
+                if (hls) {
+                    try {
+                        hls.destroy();
+                    } catch(e) {
+                        console.error('Error destroying hls:', e);
+                    }
+                    hls = null;
+                }
+                
+                hls = new Hls({
+                    debug: true,
+                    enableWorker: true,
+                    liveSyncDurationCount: 3,
+                    liveMaxLatencyDurationCount: 10,
+                    liveDurationInfinity: true,
+                    highBufferWatchdogPeriod: 1,
+                    maxBufferLength: 60,
+                    maxMaxBufferLength: 120,
+                    backBufferLength: 30,
+                    manifestLoadingTimeOut: 20000,
+                    manifestLoadingMaxRetry: 10,
+                    manifestLoadingRetryDelay: 1000,
+                    levelLoadingTimeOut: 20000,
+                    levelLoadingMaxRetry: 10,
+                    fragLoadingTimeOut: 30000,
+                    fragLoadingMaxRetry: 10,
+                    xhrSetup: function(xhr, url) {
+                        xhr.withCredentials = false;
+                    }
+                });
+                
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    console.error('HLS Error:', data);
+                    
+                    if (data.fatal) {
+                        switch(data.type) {
+                            case Hls.ErrorTypes.NETWORK_ERROR:
+                                console.log('Fatal network error, trying to recover...');
+                                updateStatus(`Network error: ${data.details}, retrying...`, 'loading');
+                                setTimeout(() => {
+                                    if (hls) {
+                                        hls.startLoad();
+                                    }
+                                }, 1000);
+                                break;
+                                
+                            case Hls.ErrorTypes.MEDIA_ERROR:
+                                console.log('Fatal media error, trying to recover...');
+                                updateStatus('Media error, recovering...', 'loading');
+                                try {
+                                    hls.recoverMediaError();
+                                } catch(e) {
+                                    console.error('Recovery failed:', e);
+                                    isPlaying = false;
+                                    updateStatus('Fatal media error', 'error');
+                                }
+                                break;
+                                
+                            default:
+                                console.log('Fatal error, cannot recover');
+                                updateStatus(`Fatal error: ${data.details}`, 'error');
+                                isPlaying = false;
+                                break;
+                        }
+                    } else {
+                        console.warn('Non-fatal error:', data.details);
+                    }
+                });
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    console.log('Manifest parsed!');
+                    updateStatus('✓ Stream ready', 'playing');
+                    isPlaying = true;
+                    video.play().catch(e => {
+                        console.error('Play error:', e);
+                        updateStatus('Click play on video player', 'loading');
+                    });
+                });
+                
+                hls.loadSource(streamUrl);
+                hls.attachMedia(video);
+                
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = streamUrl;
+                isPlaying = true;
+                video.play().catch(e => console.error('Play error:', e));
+            } else {
+                updateStatus('HLS not supported', 'error');
+            }
+        }
+
+        function stopStream() {
+            console.log('Stop button clicked');
+            isPlaying = false;
+            video.pause();
+            if (hls) {
+                try {
+                    hls.destroy();
+                } catch(e) {
+                    console.error('Error destroying hls:', e);
+                }
+                hls = null;
+            }
+            updateStatus('Stopped', 'loading');
+        }
+
+        // Set up event listeners
+        playBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            playStream();
+        });
+        
+        stopBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            stopStream();
+        });
+        
+        gatewayLocal.addEventListener('change', function(e) {
+            e.preventDefault();
+            if (this.checked) {
+                switchGateway('local');
+            }
+        });
+        
+        gatewayPublic.addEventListener('change', function(e) {
+            e.preventDefault();
+            if (this.checked) {
+                switchGateway('public');
+            }
+        });
+
+        // Initialize
+        updateStatus('Ready. Select gateway and click Play.', 'loading');
+        updateCurrentUrl();
+        console.log('Player initialized');
+    </script>
+</body>
+</html>

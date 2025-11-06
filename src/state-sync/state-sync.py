@@ -6,12 +6,17 @@ import json
 import requests
 import time
 import threading
+import base64
 from datetime import datetime
 
 IPFS_API = os.getenv('IPFS_API', 'http://ipfs:5001')
 NODE_ID = os.getenv('NODE_ID', 'unknown')
-STREAM_TOPIC = os.getenv('STREAM_TOPIC', 'p2p-radio-stream')
+STREAM_TOPIC = os.getenv('STREAM_TOPIC', 'sleetbubble-stream')
 STATE_DIR = '/state'
+
+def encode_topic_multibase(topic):
+    encoded = base64.urlsafe_b64encode(topic.encode()).decode().rstrip('=')
+    return 'u' + encoded
 
 class StateSync:
     def __init__(self):
@@ -37,15 +42,25 @@ class StateSync:
     
     def subscribe_to_topic(self):
         print(f"Subscribing to topic: {STREAM_TOPIC}")
+        encoded_topic = encode_topic_multibase(STREAM_TOPIC)
+        print(f"Encoded topic (multibase): {encoded_topic}")
+        
         try:
             response = requests.post(
                 f'{IPFS_API}/api/v0/pubsub/sub',
-                params={'arg': STREAM_TOPIC},
+                params={'arg': encoded_topic},
                 stream=True,
                 timeout=None
             )
             
-            for line in response.iter_lines():
+            if response.status_code != 200:
+                print(f"Failed to subscribe: HTTP {response.status_code}")
+                print(f"Response: {response.text}")
+                raise Exception(f"Subscription failed with status {response.status_code}")
+            
+            print(f"Successfully subscribed, waiting for messages...")
+            
+            for line in response.iter_lines(chunk_size=1, decode_unicode=False):
                 if not self.running:
                     break
                     
@@ -53,8 +68,16 @@ class StateSync:
                     try:
                         message = json.loads(line.decode('utf-8'))
                         if 'data' in message:
-                            data = json.loads(message['data'])
-                            self.handle_state_update(data)
+                            data_multibase = message['data']
+                            if data_multibase.startswith('u'):
+                                data_base64 = data_multibase[1:]
+                                data_bytes = base64.urlsafe_b64decode(data_base64 + '==')
+                                data = json.loads(data_bytes.decode('utf-8'))
+                                self.handle_state_update(data)
+                            else:
+                                print(f"Unexpected encoding prefix: {data_multibase[0]}")
+                    except json.JSONDecodeError as e:
+                        print(f"JSON decode error: {e}")
                     except Exception as e:
                         print(f"Error parsing message: {e}")
                         
@@ -120,8 +143,9 @@ class StateSync:
                         state = json.load(f)
                     
                     if state != self.local_state:
+                        encoded_topic = encode_topic_multibase(STREAM_TOPIC)
                         data = {
-                            'arg': STREAM_TOPIC
+                            'arg': encoded_topic
                         }
                         files = {
                             'data': json.dumps(state)
@@ -137,6 +161,8 @@ class StateSync:
                         if response.status_code == 200:
                             self.local_state = state
                             print(f"Published local state: position={state.get('position')}")
+                        else:
+                            print(f"Failed to publish: HTTP {response.status_code}")
                         
             except Exception as e:
                 print(f"Error publishing state: {e}")

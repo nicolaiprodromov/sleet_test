@@ -19,4 +19,4 @@ WORKDIR /app
 
 COPY src/state-sync/state-sync.py /app/
 
-CMD ["python3", "/app/state-sync.py"]
+CMD ["python3", "-u", "/app/state-sync.py"]

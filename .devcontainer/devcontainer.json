@@ -9,10 +9,11 @@
     }
   },
 
-  "postCreateCommand": "wget -q https://dist.ipfs.tech/kubo/v0.31.0/kubo_v0.31.0_linux-amd64.tar.gz -O /tmp/ipfs.tar.gz && tar -xzf /tmp/ipfs.tar.gz -C /tmp && sudo bash /tmp/kubo/install.sh && rm -rf /tmp/kubo /tmp/ipfs.tar.gz",
+  "postCreateCommand": "wget -q https://dist.ipfs.tech/kubo/v0.31.0/kubo_v0.31.0_linux-amd64.tar.gz -O /tmp/ipfs.tar.gz && tar -xzf /tmp/ipfs.tar.gz -C /tmp && sudo bash /tmp/kubo/install.sh && rm -rf /tmp/kubo /tmp/ipfs.tar.gz && docker build -t sleet-webserver /workspaces/sleet_test/test",
 
   "forwardPorts": [
     80, 81, 443, 444,
+    5500,
     8080, 8081,
     5001, 5002,
     4001, 4002
@@ -21,6 +22,7 @@
   "portsAttributes": {
     "80":   { "label": "Main Web Player",     "onAutoForward": "notify", "visibility": "public" },
     "81":   { "label": "Node 2 Web Player",   "onAutoForward": "notify", "visibility": "public" },
+    "5500": { "label": "Web Player",          "onAutoForward": "openBrowser", "visibility": "public" },
     "443":  { "label": "HTTPS Main",          "onAutoForward": "silent", "visibility": "public" },
     "444":  { "label": "HTTPS Node 2",        "onAutoForward": "silent", "visibility": "public" },
     "8080": { "label": "IPFS Gateway Node 1", "onAutoForward": "notify", "visibility": "public" },
@@ -30,6 +32,8 @@
     "4001": { "label": "IPFS Swarm Node 1",   "onAutoForward": "silent", "visibility": "public" },
     "4002": { "label": "IPFS Swarm Node 2",   "onAutoForward": "silent", "visibility": "public" }
   },
+
+  "postStartCommand": "docker rm -f sleet-webserver 2>/dev/null || true && docker run -d --name sleet-webserver -p 5500:5500 -v /workspaces/sleet_test/test:/app:ro --restart unless-stopped sleet-webserver",
 
   "customizations": {
     "vscode": {

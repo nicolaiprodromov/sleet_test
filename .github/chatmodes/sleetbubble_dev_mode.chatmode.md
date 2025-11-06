@@ -1,7 +1,9 @@
 ---
-applyTo: '**'
+description: 'Sleetbubble Dev Mode'
+tools: ['runCommands', 'runTasks', 'deepwiki/*', 'playwright/*', 'edit', 'runNotebooks', 'search', 'new', 'extensions', 'todos', 'usages', 'vscodeAPI', 'problems', 'changes', 'testFailure', 'openSimpleBrowser', 'githubRepo', 'github.vscode-pull-request-github/copilotCodingAgent', 'github.vscode-pull-request-github/activePullRequest', 'github.vscode-pull-request-github/openPullRequest', 'ms-vscode.vscode-websearchforcopilot/websearch']
 ---
-We are working on sleetbubble which is a decentralized p2p radio streaming platform built on IPFS, docker, liquidsoap and python.
+You are an expert developer that is working on sleetbubble which is a decentralized p2p radio streaming platform built on IPFS, docker, liquidsoap and python.
+
 The codebase is essentially a node for anyone to deploy and create horizontal scaling for the radio streaming by adding new ipfs gateways to the network.
 
 When working on the sleetbubble project, please keep the following guidelines in mind:
@@ -12,5 +14,4 @@ When working on the sleetbubble project, please keep the following guidelines in
 4. **Organization**: Keep the code organized and modular. Follow existing patterns and structures within the codebase. All functional code of sleetbubble should be inside the `src` folder. in roo we only want the `deploy.sh`, `README.md`, `docker-compose.yml`, `.env` files, `requirements.txt`, and the `playlist-config.json`.
 5. **Research**: Always ground your knowledge with internet searches and the #deepwiki tool. Its super important to be well informed about the correct usage of API and design approaches when using frameworks, packages or libraries.
 
-We also want to use `docker compose` in this project not `docker-compose` so please be careful with that.
-
+We also want to use `docker compose` in this project not `docker-compose` so please be careful with that

@@ -73,14 +73,25 @@ class SegmentState:
             'node_id': NODE_ID
         }
         
-        # Keep only the last MAX_SEGMENTS per quality
+        # Keep only the last MAX_SEGMENTS per quality (keep newest)
         if len(self.segments[quality]) > MAX_SEGMENTS:
-            # Remove oldest segments
-            items_to_remove = list(self.segments[quality].keys())[:-MAX_SEGMENTS]
-            for item in items_to_remove:
-                removed = self.segments[quality].pop(item)
-                logger.info(f"Removed old segment from state: {item}")
-                # Optionally unpin old segments (handled by cleanup service)
+            # Sort by timestamp and remove oldest segments
+            sorted_segments = sorted(
+                self.segments[quality].items(),
+                key=lambda x: x[1]['timestamp'],
+                reverse=True
+            )
+            
+            # Keep only the newest MAX_SEGMENTS
+            segments_to_keep = dict(sorted_segments[:MAX_SEGMENTS])
+            
+            # Log removed segments
+            for filename in list(self.segments[quality].keys()):
+                if filename not in segments_to_keep:
+                    logger.info(f"Removed old segment from state: {filename}")
+            
+            # Replace with filtered segments (preserving order)
+            self.segments[quality] = OrderedDict(sorted_segments[:MAX_SEGMENTS])
         
         self.save_state()
     

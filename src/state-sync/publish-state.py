@@ -4,17 +4,23 @@ import os
 import sys
 import json
 import requests
+import base64
 
 IPFS_API = os.getenv('IPFS_API', 'http://ipfs:5001')
-STREAM_TOPIC = os.getenv('STREAM_TOPIC', 'p2p-radio-stream')
+STREAM_TOPIC = os.getenv('STREAM_TOPIC', 'sleetbubble-stream')
+
+def encode_topic_multibase(topic):
+    encoded = base64.urlsafe_b64encode(topic.encode()).decode().rstrip('=')
+    return 'u' + encoded
 
 def publish_state(state_file):
     try:
         with open(state_file, 'r') as f:
             state_data = f.read()
         
+        encoded_topic = encode_topic_multibase(STREAM_TOPIC)
         data = {
-            'arg': STREAM_TOPIC
+            'arg': encoded_topic
         }
         files = {
             'data': state_data

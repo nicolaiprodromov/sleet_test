@@ -34,7 +34,7 @@ services:
       - IPFS_API=http://ipfs:5001
       - IPFS_GATEWAY=http://ipfs:8080
       - NODE_ID=${NODE_ID:-node1}
-      - STREAM_TOPIC=p2p-radio-stream
+      - STREAM_TOPIC=sleetbubble-stream
     restart: unless-stopped
 
   state-sync:
@@ -53,7 +53,7 @@ services:
     environment:
       - IPFS_API=http://ipfs:5001
       - NODE_ID=${NODE_ID:-node1}
-      - STREAM_TOPIC=p2p-radio-stream
+      - STREAM_TOPIC=sleetbubble-stream
     restart: unless-stopped
 
   hls-uploader:
@@ -101,9 +101,10 @@ services:
       - HLS_DIR=/hls
       - STATE_DIR=/state
       - NODE_ID=${NODE_ID:-node1}
-      - PLAYLIST_UPDATE_INTERVAL=3
+      - PLAYLIST_UPDATE_INTERVAL=2
       - IPNS_LIFETIME=24h
-      - IPNS_TTL=30s
+      - IPNS_TTL=5s
+      - MAX_PLAYLIST_SEGMENTS=20
     command: python3 /src/playlist-generator/generate-ipns-playlist.py
     restart: unless-stopped
 

@@ -84,8 +84,8 @@ end
 output.file.hls(
   playlist="live.m3u8",
   segment_duration=6.0,
-  segments=10,
-  segments_overhead=5,
+  segments=20,
+  segments_overhead=10,
   segment_name=segment_name,
   streams_info=streams_info,
   on_file_change=on_file_change,

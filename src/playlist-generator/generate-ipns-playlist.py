@@ -26,7 +26,7 @@ UPDATE_INTERVAL = int(os.getenv('PLAYLIST_UPDATE_INTERVAL', '2'))  # seconds
 SEGMENT_DURATION = 6  # seconds (must match liquidsoap config)
 IPNS_LIFETIME = os.getenv('IPNS_LIFETIME', '24h')  # How long IPNS records are valid
 IPNS_TTL = os.getenv('IPNS_TTL', '10s')  # Cache time for IPNS resolution
-MAX_PLAYLIST_SEGMENTS = int(os.getenv('MAX_PLAYLIST_SEGMENTS', '15'))  # Segments in HLS playlist
+MAX_PLAYLIST_SEGMENTS = int(os.getenv('MAX_PLAYLIST_SEGMENTS', '20'))  # Segments in HLS playlist (2 minutes of buffer)
 
 # Setup logging
 logging.basicConfig(
@@ -188,11 +188,14 @@ class IPNSPlaylistGenerator:
             logger.warning(f"No segments available for {quality}")
             return None
         
-        # Get segment list (sorted by timestamp)
-        segment_list = sorted(segments.items(), key=lambda x: x[1]['timestamp'])
+        # Get segment list (sorted by timestamp - newest first)
+        segment_list = sorted(segments.items(), key=lambda x: x[1]['timestamp'], reverse=True)
         
-        # Take only the last N segments for the live stream
-        segment_list = segment_list[-MAX_PLAYLIST_SEGMENTS:]
+        # Take only the MOST RECENT N segments for the live stream
+        segment_list = segment_list[:MAX_PLAYLIST_SEGMENTS]
+        
+        # Reverse back to chronological order for playlist
+        segment_list = list(reversed(segment_list))
         
         if not segment_list:
             return None
@@ -201,12 +204,13 @@ class IPNSPlaylistGenerator:
         first_segment = segment_list[0]
         sequence_num = self.extract_sequence_from_filename(first_segment[0])
         
-        # Build M3U8 content
+        # Build M3U8 content for LIVE EVENT stream
         lines = [
             '#EXTM3U',
             '#EXT-X-VERSION:3',
             f'#EXT-X-TARGETDURATION:{SEGMENT_DURATION + 1}',
             f'#EXT-X-MEDIA-SEQUENCE:{sequence_num}',
+            '#EXT-X-PLAYLIST-TYPE:EVENT',  # Mark as event/live stream (no VOD end)
         ]
         
         # Add segments with IPFS gateway URLs
@@ -216,6 +220,7 @@ class IPNSPlaylistGenerator:
             # Use relative path for gateway resolution
             lines.append(f'/ipfs/{cid}')
         
+        # Do NOT add #EXT-X-ENDLIST for live streams
         return '\n'.join(lines) + '\n'
     
     def generate_master_playlist(self, stream_ipns):
