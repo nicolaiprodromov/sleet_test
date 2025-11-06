@@ -6,7 +6,7 @@ echo "========================================="
 echo ""
 
 echo "1. Checking if segments are being uploaded to IPFS..."
-RECENT_UPLOAD=$(docker-compose logs hls-uploader --tail 5 2>/dev/null | grep "✓ Uploaded" | tail -1)
+RECENT_UPLOAD=$(docker compose logs uploader --tail 5 2>/dev/null | grep "✓ Uploaded" | tail -1)
 if [ -n "$RECENT_UPLOAD" ]; then
     echo "✅ Segments ARE being uploaded to IPFS"
     echo "$RECENT_UPLOAD"

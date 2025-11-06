@@ -81,7 +81,7 @@ https://dweb.link/ipns/k51qzi5uqu5d...
 docker compose logs -f
 
 # View specific service
-docker compose logs -f playlist-generator
+docker compose logs -f playlist
 
 # Stop node
 docker compose down
@@ -93,10 +93,10 @@ docker compose restart
 docker compose up setup
 
 # Check IPFS peers
-docker exec p2p-radio-ipfs ipfs swarm peers
+docker exec sleetbubble-ipfs ipfs swarm peers
 
 # List IPNS keys
-docker exec p2p-radio-ipfs ipfs key list -l
+docker exec sleetbubble-ipfs ipfs key list -l
 ```
 
 ## Stream Qualities

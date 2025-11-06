@@ -9,7 +9,7 @@
     }
   },
 
-  "postCreateCommand": "wget -q https://dist.ipfs.tech/kubo/v0.31.0/kubo_v0.31.0_linux-amd64.tar.gz -O /tmp/ipfs.tar.gz && tar -xzf /tmp/ipfs.tar.gz -C /tmp && sudo bash /tmp/kubo/install.sh && rm -rf /tmp/kubo /tmp/ipfs.tar.gz && docker build -t sleet-webserver /workspaces/sleet_test/test",
+  "postCreateCommand": "wget -q https://dist.ipfs.tech/kubo/v0.31.0/kubo_v0.31.0_linux-amd64.tar.gz -O /tmp/ipfs.tar.gz && tar -xzf /tmp/ipfs.tar.gz -C /tmp && sudo bash /tmp/kubo/install.sh && rm -rf /tmp/kubo /tmp/ipfs.tar.gz && docker build -t sleetbubble-test-web /workspaces/sleet_test/test",
 
   "forwardPorts": [
     80, 81, 443, 444,
@@ -33,7 +33,7 @@
     "4002": { "label": "IPFS Swarm Node 2",   "onAutoForward": "silent", "visibility": "public" }
   },
 
-  "postStartCommand": "docker rm -f sleet-webserver 2>/dev/null || true && docker run -d --name sleet-webserver -p 5500:5500 -v /workspaces/sleet_test/test:/app:ro --restart unless-stopped sleet-webserver",
+  "postStartCommand": "docker rm -f sleetbubble-test-frontend 2>/dev/null || true && docker run -d --name sleetbubble-test-frontend -p 5500:5500 -v /workspaces/sleet_test/test:/app:ro --restart unless-stopped sleetbubble-test-web",
 
   "customizations": {
     "vscode": {
@@ -45,7 +45,10 @@
         "vittee.liquidsoap",
         "naumovs.color-highlight",
         "IBM.output-colorizer",
-        "MarkosTh09.color-picker"
+        "MarkosTh09.color-picker",
+        "docker.docker",
+        "ms-azuretools.vscode-docker",
+        "formulahendry.docker-explorer"
       ],
       "settings": {
         "workbench.colorTheme": "GitHub Dark",
