@@ -12,19 +12,15 @@
   "postCreateCommand": "wget -q https://dist.ipfs.tech/kubo/v0.31.0/kubo_v0.31.0_linux-amd64.tar.gz -O /tmp/ipfs.tar.gz && tar -xzf /tmp/ipfs.tar.gz -C /tmp && sudo bash /tmp/kubo/install.sh && rm -rf /tmp/kubo /tmp/ipfs.tar.gz",
 
   "forwardPorts": [
-    80, 81, 443, 444,
-    5500, 8888,
-    8080, 8081,
-    5001, 5002,
-    4001, 4002
+    5500, 8888, 8080, 5001, 4001
   ],
 
   "portsAttributes": {
     "5500": { "label": "Control Panel", "onAutoForward": "openBrowser", "visibility": "public" },
-    "8888": { "label": "IPFS CORS Proxy", "onAutoForward": "notify", "visibility": "public" },
-    "8080": { "label": "IPFS Gateway", "onAutoForward": "notify", "visibility": "public" },
-    "5001": { "label": "IPFS API",     "onAutoForward": "silent", "visibility": "public" },
-    "4001": { "label": "IPFS Swarm",   "onAutoForward": "silent", "visibility": "public" }
+    "8888": { "label": "Proxy", "onAutoForward": "notify", "visibility": "public" },
+    "8080": { "label": "Gateway", "onAutoForward": "notify", "visibility": "public" },
+    "5001": { "label": "IPFS API", "onAutoForward": "silent", "visibility": "public" },
+    "4001": { "label": "IPFS Swarm", "onAutoForward": "silent", "visibility": "public" }
     },
 
   "customizations": {
@@ -40,7 +36,8 @@
         "MarkosTh09.color-picker",
         "docker.docker",
         "ms-azuretools.vscode-docker",
-        "formulahendry.docker-explorer"
+        "formulahendry.docker-explorer",
+        "streetsidesoftware.code-spell-checker"
       ],
       "settings": {
         "workbench.colorTheme": "GitHub Dark",

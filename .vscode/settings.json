@@ -13,5 +13,12 @@
         "postcss",
         "xml",
         "html"
+    ],
+    "cSpell.words": [
+        "ipfs",
+        "IPNS",
+        "liquidsoap",
+        "prechunk",
+        "prechunked"
     ]
 }

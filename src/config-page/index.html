@@ -894,9 +894,18 @@
         };
         
         const GATEWAYS = {
-            proxy: () => `${getProxyUrl(8888)}/ipns/${streamIpnsKey}`,
-            local: () => `${getProxyUrl(8080)}/ipns/${streamIpnsKey}`,
-            public: () => `https://ipfs.io/ipns/${streamIpnsKey}`
+            proxy: () => {
+                const ts = Date.now();
+                return `${getProxyUrl(8888)}/ipns/${streamIpnsKey}?t=${ts}`;
+            },
+            local: () => {
+                const ts = Date.now();
+                return `${getProxyUrl(8080)}/ipns/${streamIpnsKey}?t=${ts}`;
+            },
+            public: () => {
+                const ts = Date.now();
+                return `https://ipfs.io/ipns/${streamIpnsKey}?t=${ts}`;
+            }
         };
         
         async function fetchIPFSApi(endpoint, params = {}) {
@@ -1058,7 +1067,8 @@
                 return;
             }
             
-            const streamUrl = GATEWAYS[currentGateway]();
+            const timestamp = Date.now();
+            const streamUrl = GATEWAYS[currentGateway]() + `?cachebust=${timestamp}`;
             updatePlayerStatus('Loading...', 'loading');
             
             if (typeof Hls === 'undefined') {
@@ -1075,17 +1085,47 @@
                 hls = new Hls({
                     debug: false,
                     enableWorker: true,
-                    liveSyncDurationCount: 3,
-                    liveMaxLatencyDurationCount: 10,
+                    liveSyncDurationCount: 2,
+                    liveMaxLatencyDurationCount: 6,
                     liveDurationInfinity: true,
-                    maxBufferLength: 60,
-                    maxMaxBufferLength: 120,
-                    backBufferLength: 30,
+                    maxBufferLength: 18,
+                    maxMaxBufferLength: 36,
+                    backBufferLength: 6,
                     manifestLoadingTimeOut: 20000,
                     manifestLoadingMaxRetry: 10,
                     manifestLoadingRetryDelay: 1000,
+                    startPosition: -1,
+                    lowLatencyMode: false,
                     xhrSetup: function(xhr, url) {
                         xhr.withCredentials = false;
+                        const cacheBustedUrl = url.includes('?') ? url : `${url}?t=${Date.now()}`;
+                        xhr.open('GET', cacheBustedUrl, true);
+                        xhr.setRequestHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+                        xhr.setRequestHeader('Pragma', 'no-cache');
+                        xhr.setRequestHeader('Expires', '0');
+                    }
+                });
+                
+                hls.on(Hls.Events.MANIFEST_LOADED, function(event, data) {
+                    console.log('Manifest loaded, attempting to sync to live edge');
+                });
+                
+                hls.on(Hls.Events.LEVEL_UPDATED, function(event, data) {
+                    if (videoElement && hls.media && data.details.live) {
+                        const liveEdge = data.details.edge;
+                        const currentTime = videoElement.currentTime;
+                        const bufferEnd = videoElement.buffered.length > 0 ? 
+                            videoElement.buffered.end(videoElement.buffered.length - 1) : 0;
+                        
+                        const latency = liveEdge - currentTime;
+                        
+                        if (latency > 18) {
+                            console.log(`Latency too high (${latency.toFixed(2)}s), seeking to live edge`);
+                            const seekTarget = liveEdge - 6;
+                            if (seekTarget > 0 && seekTarget < bufferEnd) {
+                                videoElement.currentTime = seekTarget;
+                            }
+                        }
                     }
                 });
                 

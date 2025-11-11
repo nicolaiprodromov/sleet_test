@@ -35,79 +35,28 @@ wait_for_ipfs() {
     return 1
 }
 
-copy_music() {
+run_setup_processor() {
     echo ""
-    echo "==================================="
-    echo "Copying Music from Source"
-    echo "==================================="
+    echo "Running setup processor..."
     
-    python3 /src/setup/copy-music.py /workspace/playlist.config.json /music || {
-        echo "Warning: Music copy had issues, continuing..."
-    }
-}
-
-prepare_music() {
-    echo ""
-    echo "Checking music directory..."
-    
-    if [ ! "$(ls -A /music)" ]; then
-        echo "WARNING: No music files found in /music/"
-        echo "Please add music files to data/music/ directory"
-        return 0
+    if [ ! -f /workspace/setup.config.json ]; then
+        echo "ERROR: setup.config.json not found"
+        exit 1
     fi
-    
-    echo "Processing and pinning music files..."
-    python3 /src/liquidsoap/prepare-music.py /music /data/processed || {
-        echo "Warning: Music preparation had issues, continuing..."
-    }
-    
-    echo "✓ Music processing complete"
-}
-
-build_playlist() {
-    echo ""
-    echo "Building playlist from configuration..."
     
     if [ ! -f /workspace/playlist.config.json ]; then
-        echo "WARNING: No playlist.config.json found"
-        return 0
+        echo "WARNING: playlist.config.json not found"
     fi
     
-    python3 /src/playlist/build-playlist.py /workspace/playlist.config.json /music /music/playlist.m3u || {
-        echo "Warning: Playlist build had issues, continuing..."
+    python3 /src/setup/setup_processor.py || {
+        echo "ERROR: Setup processor failed"
+        exit 1
     }
     
-    echo "✓ Playlist built successfully"
+    echo "✓ Setup processor complete"
 }
 
-initialize_ipns() {
-    echo ""
-    echo "==================================="
-    echo "Initializing IPNS Keys"
-    echo "==================================="
-    
-    if [ -f /state/ipns_keys.json ]; then
-        echo "✓ IPNS keys already exist"
-        echo ""
-        echo "Your permanent stream URLs:"
-        cat /state/ipns_keys.json
-        return 0
-    fi
-    
-    echo "Creating IPNS keys for mutable playlists..."
-    STATE_DIR=/state python3 /src/playlist-generator/init-ipns.py
-    
-    if [ -f /state/ipns_keys.json ]; then
-        echo ""
-        echo "✓ IPNS keys created successfully!"
-        echo ""
-        echo "Your permanent stream URLs:"
-        cat /state/ipns_keys.json
-    else
-        echo "ERROR: Failed to create IPNS keys"
-        return 1
-    fi
-}
+
 
 create_setup_marker() {
     echo ""
@@ -118,10 +67,7 @@ create_setup_marker() {
 
 main() {
     if wait_for_ipfs; then
-        copy_music
-        prepare_music
-        build_playlist
-        initialize_ipns
+        run_setup_processor
         create_setup_marker
         
         echo ""
@@ -135,7 +81,8 @@ main() {
         echo ""
         echo "IPFS configuration applied from: ipfs.config.json"
         echo "Stream info will be available at: data/state/stream_info.json"
-        echo "IPNS keys are stored at: data/state/ipns_keys.json"
+        echo ""
+        echo "Note: IPNS keys will be created automatically by the streamer service"
         echo ""
     else
         echo "Setup failed: IPFS not available"

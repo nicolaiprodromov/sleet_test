@@ -14,7 +14,8 @@
     "HTTPHeaders": {
       "Access-Control-Allow-Origin": ["*"],
       "Access-Control-Allow-Methods": ["GET", "POST", "PUT"],
-      "Access-Control-Allow-Headers": ["*"]
+      "Access-Control-Allow-Headers": ["*"],
+      "Cache-Control": ["no-cache, no-store, must-revalidate"]
     }
   },
   "Experimental": {

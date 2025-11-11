@@ -25,6 +25,7 @@ ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Origin '["*"]'
 ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Methods '["GET", "POST", "PUT", "OPTIONS"]'
 ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Headers '["*"]'
 ipfs config --json Gateway.HTTPHeaders.Access-Control-Allow-Credentials '["true"]'
+ipfs config --json Gateway.HTTPHeaders.Cache-Control '["no-cache, no-store, must-revalidate"]'
 
 ipfs config --json Experimental.Libp2pStreamMounting true
 ipfs config --json Pubsub.Enabled true

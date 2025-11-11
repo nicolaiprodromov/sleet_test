@@ -35,171 +35,78 @@ services:
       - NODE_ID=${NODE_ID:-node1}
     restart: "no"
 
-  liquidsoap:
+  streamer:
     build:
       context: .
-      dockerfile: src/liquidsoap/Dockerfile
+      dockerfile: src/streamer/Dockerfile
       cache_from:
-        - sleetbubble-liquidsoap:latest
-    image: sleetbubble-liquidsoap:latest
-    container_name: sleetbubble-liquidsoap
+        - sleetbubble-streamer:latest
+    image: sleetbubble-streamer:latest
+    container_name: sleetbubble-streamer-${NODE_ID:-node1}
     depends_on:
       setup:
         condition: service_completed_successfully
       ipfs:
         condition: service_started
     volumes:
-      - ./src/liquidsoap/radio.liq:/etc/liquidsoap/radio.liq
-      - ./data/music:/music
-      - ./data/hls:/hls
+      - .:/workspace
       - ./data/state:/state
+      - ./data/processed:/data/processed
       - ./src:/src
-      - ./playlist.config.json:/workspace/playlist.config.json
+      - ./streaming.config.json:/workspace/streaming.config.json:ro
     environment:
       - IPFS_API=http://ipfs:5001
       - IPFS_GATEWAY=http://ipfs:8080
-      - NODE_ID=${NODE_ID:-node1}
-      - STREAM_TOPIC=sleetbubble-stream
-    restart: unless-stopped
-
-  state-sync:
-    build:
-      context: .
-      dockerfile: src/state-sync/Dockerfile
-      cache_from:
-        - sleetbubble-state-sync:latest
-    image: sleetbubble-state-sync:latest
-    container_name: sleetbubble-state-sync
-    depends_on:
-      setup:
-        condition: service_completed_successfully
-      ipfs:
-        condition: service_started
-    volumes:
-      - ./data/state:/state
-      - ./src:/src
-    environment:
-      - IPFS_API=http://ipfs:5001
-      - NODE_ID=${NODE_ID:-node1}
-      - STREAM_TOPIC=sleetbubble-stream
-    restart: unless-stopped
-
-  uploader:
-    build:
-      context: .
-      dockerfile: src/hls-uploader/Dockerfile
-      cache_from:
-        - sleetbubble-uploader:latest
-    image: sleetbubble-uploader:latest
-    container_name: sleetbubble-uploader
-    depends_on:
-      setup:
-        condition: service_completed_successfully
-      ipfs:
-        condition: service_started
-      liquidsoap:
-        condition: service_started
-    volumes:
-      - ./data/hls:/hls
-      - ./data/state:/state
-      - ./src:/src
-    environment:
-      - IPFS_API=http://ipfs:5001
-      - HLS_DIR=/hls
       - STATE_DIR=/state
+      - PROCESSED_DIR=/data/processed
       - NODE_ID=${NODE_ID:-node1}
-      - MAX_SEGMENTS=50
-    command: python3 /src/hls-uploader/hls-to-ipfs.py
+      - STREAMING_CONFIG=/workspace/streaming.config.json
     restart: unless-stopped
 
-  playlist:
-    build:
-      context: .
-      dockerfile: src/playlist-generator/Dockerfile
-      cache_from:
-        - sleetbubble-playlist:latest
-    image: sleetbubble-playlist:latest
-    container_name: sleetbubble-playlist
-    depends_on:
-      setup:
-        condition: service_completed_successfully
-      ipfs:
-        condition: service_started
-      uploader:
-        condition: service_started
-    volumes:
-      - ./data/hls:/hls
-      - ./data/state:/state
-      - ./src:/src
-    environment:
-      - IPFS_API=http://ipfs:5001
-      - IPFS_GATEWAY=http://ipfs:8080
-      - HLS_DIR=/hls
-      - STATE_DIR=/state
-      - NODE_ID=${NODE_ID:-node1}
-      - PLAYLIST_UPDATE_INTERVAL=2
-      - IPNS_LIFETIME=24h
-      - IPNS_TTL=5s
-      - MAX_PLAYLIST_SEGMENTS=20
-    command: python3 /src/playlist-generator/generate-ipns-playlist.py
-    restart: unless-stopped
+  # state-sync:
+  #   build:
+  #     context: .
+  #     dockerfile: src/state-sync/Dockerfile
+  #     cache_from:
+  #       - sleetbubble-state-sync:latest
+  #   image: sleetbubble-state-sync:latest
+  #   container_name: sleetbubble-state-sync-${NODE_ID:-node1}
+  #   depends_on:
+  #     setup:
+  #       condition: service_completed_successfully
+  #     ipfs:
+  #       condition: service_started
+  #   volumes:
+  #     - ./data/state:/state
+  #     - ./src:/src
+  #   environment:
+  #     - IPFS_API=http://ipfs:5001
+  #     - NODE_ID=${NODE_ID:-node1}
+  #     - STREAM_TOPIC=sleetbubble-stream
+  #   restart: unless-stopped
 
-  segment-cleanup:
-    build:
-      context: .
-      dockerfile: src/segment-cleanup/Dockerfile
-      cache_from:
-        - sleetbubble-segment-cleanup:latest
-    image: sleetbubble-segment-cleanup:latest
-    container_name: sleetbubble-segment-cleanup
-    depends_on:
-      setup:
-        condition: service_completed_successfully
-      ipfs:
-        condition: service_started
-      uploader:
-        condition: service_started
-    volumes:
-      - ./data/hls:/hls
-      - ./data/state:/state
-      - ./src:/src
-    environment:
-      - IPFS_API=http://ipfs:5001
-      - HLS_DIR=/hls
-      - STATE_DIR=/state
-      - NODE_ID=${NODE_ID:-node1}
-      - MAX_SEGMENTS=50
-      - CLEANUP_INTERVAL=60
-      - SEGMENT_RETENTION_TIME=300
-    command: python3 /src/segment-cleanup/cleanup-old-segments.py
-    restart: unless-stopped
-
-  config-page:
-    build:
-      context: .
-      dockerfile: src/config-page/Dockerfile
-      cache_from:
-        - sleetbubble-config-page:latest
-    image: sleetbubble-config-page:latest
-    container_name: sleetbubble-config-page
-    depends_on:
-      setup:
-        condition: service_completed_successfully
-      ipfs:
-        condition: service_started
-      liquidsoap:
-        condition: service_started
-      uploader:
-        condition: service_started
-      playlist:
-        condition: service_started
-    ports:
-      - "${CONFIG_PAGE_PORT:-5500}:5500"
-      - "${IPFS_CORS_PROXY_PORT:-8888}:8888"
-    volumes:
-      - ./src/config-page/index.html:/app/index.html:ro
-      - ./data/state:/state:ro
-      - ./data/music:/music:ro
-    restart: unless-stopped
+  # config-page:
+  #   build:
+  #     context: .
+  #     dockerfile: src/config-page/Dockerfile
+  #     cache_from:
+  #       - sleetbubble-config-page:latest
+  #   image: sleetbubble-config-page:latest
+  #   container_name: sleetbubble-config-page-${NODE_ID:-node1}
+  #   depends_on:
+  #     setup:
+  #       condition: service_completed_successfully
+  #     ipfs:
+  #       condition: service_started
+  #     streamer:
+  #       condition: service_started
+  #   ports:
+  #     - "${CONFIG_PAGE_PORT:-5500}:5500"
+  #     - "${IPFS_CORS_PROXY_PORT:-8888}:8888"
+  #   volumes:
+  #     - ./src/config-page/index.html:/app/index.html:ro
+  #     - ./data/state:/state:ro
+  #     - ./data/music:/music:ro
+  #   restart: unless-stopped
 
 

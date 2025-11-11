@@ -1,0 +1,20 @@
+{
+  "audio": {
+    "segment_duration": 6,
+    "bitrate": "128k",
+    "codec": "aac"
+  },
+  "jingles": {
+    "enabled": true,
+    "cycle": 2,
+    "source": "src/jingles"
+  },
+  "processing": {
+    "force_rebuild": false,
+    "parallel_processing": false
+  },
+  "ipfs": {
+    "pin_segments": true,
+    "timeout": 30
+  }
+}
