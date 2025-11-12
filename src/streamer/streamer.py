@@ -26,7 +26,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 class StreamingConfig:
     def __init__(self, config_path):
         with open(config_path, 'r') as f:
@@ -45,7 +44,6 @@ class StreamingConfig:
                    f"update_interval={self.update_interval}s, "
                    f"max_segments={self.max_segments}, "
                    f"advance_every={self.advance_every}")
-
 
 class IPNSManager:
     def __init__(self):
@@ -149,7 +147,6 @@ class IPNSManager:
             logger.error(f"Error publishing to IPNS {name}: {e}")
             return None
 
-
 class SlidingWindowStreamer:
     def __init__(self, config, ipns_manager):
         self.config = config
@@ -163,7 +160,7 @@ class SlidingWindowStreamer:
         self.sequence_number = state['sequence']
         self.update_counter = 0
         
-        key_name = f'{NODE_ID}-stream'
+        key_name = 'sleetbubble-sex'
         key_id = self.ipns.ensure_key(key_name)
         if key_id:
             self.stream_key = {'name': key_name, 'id': key_id}
@@ -255,6 +252,7 @@ class SlidingWindowStreamer:
             return None
         
         current_time = datetime.utcnow()
+        timestamp = int(current_time.timestamp())
         
         lines = [
             '#EXTM3U',
@@ -267,7 +265,7 @@ class SlidingWindowStreamer:
             segment_time = current_time - timedelta(seconds=(len(segments) - i - 1) * 6)
             lines.append(f'#EXT-X-PROGRAM-DATE-TIME:{segment_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]}Z')
             lines.append('#EXTINF:6.0,')
-            lines.append(f'/ipfs/{cid}')
+            lines.append(f'/ipfs/{cid}?t={timestamp}')
         
         return '\n'.join(lines) + '\n'
     
@@ -342,7 +340,6 @@ class SlidingWindowStreamer:
                 json.dump(info, f, indent=2)
         except Exception as e:
             logger.error(f"Failed to write stream info: {e}")
-
 
 def main():
     logger.info("=" * 60)

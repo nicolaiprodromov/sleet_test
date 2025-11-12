@@ -8,7 +8,6 @@ services:
       - "${IPFS_API_PORT:-5001}:5001"
     volumes:
       - ./data/ipfs:/data/ipfs
-      - ./data/ipfs-staging:/export
       - ./ipfs.config.json:/ipfs-config/ipfs.config.json:ro
       - ./src/ipfs/init-ipfs.sh:/container-init.d/001-cors-config.sh:ro
     environment:
@@ -25,10 +24,10 @@ services:
       - ipfs
     volumes:
       - .:/workspace
-      - ./data/music:/music
       - ./data/state:/state
       - ./data/processed:/data/processed
       - ./src:/src
+      - ./keys/sleetbubble-sex.key:/workspace/keys/sleetbubble-sex.key:ro
     environment:
       - IPFS_API=http://ipfs:5001
       - STATE_DIR=/state
@@ -62,28 +61,6 @@ services:
       - NODE_ID=${NODE_ID:-node1}
       - STREAMING_CONFIG=/workspace/streaming.config.json
     restart: unless-stopped
-
-  # state-sync:
-  #   build:
-  #     context: .
-  #     dockerfile: src/state-sync/Dockerfile
-  #     cache_from:
-  #       - sleetbubble-state-sync:latest
-  #   image: sleetbubble-state-sync:latest
-  #   container_name: sleetbubble-state-sync-${NODE_ID:-node1}
-  #   depends_on:
-  #     setup:
-  #       condition: service_completed_successfully
-  #     ipfs:
-  #       condition: service_started
-  #   volumes:
-  #     - ./data/state:/state
-  #     - ./src:/src
-  #   environment:
-  #     - IPFS_API=http://ipfs:5001
-  #     - NODE_ID=${NODE_ID:-node1}
-  #     - STREAM_TOPIC=sleetbubble-stream
-  #   restart: unless-stopped
 
   # config-page:
   #   build:
